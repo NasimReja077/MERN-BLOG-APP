@@ -1,0 +1,48 @@
+{
+  "name": "mern-blog-backend",
+  "version": "1.0.0",
+  "description": "Backend for MERN blog application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NasimReja077/MERN-BLOG-APP.git"
+  },
+  "keywords": [
+    "mern",
+    "blog",
+    "node",
+    "express",
+    "mongodb"
+  ],
+  "author": "Nasim",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NasimReja077/MERN-BLOG-APP/issues"
+  },
+  "homepage": "https://github.com/NasimReja077/MERN-BLOG-APP#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cloudinary": "^2.7.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.16.4",
+    "mongoose-aggregate-paginate-v2": "^1.1.4",
+    "multer": "^2.0.2",
+    "nodemailer": "^7.0.5",
+    "slugify": "^1.6.6",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2"
+  }
+}
