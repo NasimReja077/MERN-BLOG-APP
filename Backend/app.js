@@ -40,6 +40,10 @@ app.get("/health", (req, res) =>{
 // // Route Mounting
 // app.use("/api/auth", authRoutes); 
 
+app.get('/', (req, res) => {
+  res.send('Hello World!')
+})
+
 // 404 handler
 app.use('*',(req, res) =>{
      res.status(404).json({
