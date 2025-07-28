@@ -1,34 +1,65 @@
-// Backend/index.js // node js and mongodb connection
+// server.js
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+require('dotenv').config();
 
-import { app } from "./app.js";
-import dotenv from "dotenv";
-import connectDB from "./src/db/index.js";
+// const authRoutes = require('./src/routes/auth.route');
+// const blogRoutes = require('./routes/blogs');
+// const commentRoutes = require('./routes/comments');
+// const errorHandler = require('./middleware/errorHandler');
 
+const app = express();
 
-// Load environment variables
-dotenv.config({
-     path: './.env'
+// Security middleware
+app.use(helmet());
+app.use(cors());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/blog_app', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => console.error('MongoDB connection error:', err));
+
+// Routes
+// app.use('/api/auth', authRoutes);
+// app.use('/api/blogs', blogRoutes);
+// app.use('/api/comments', commentRoutes);
+
+app.get('/test', (req, res) => {
+  res.send('OK');
 });
 
-const PORT = process.env.PORT || 7000;
 
-// Connect to database and start server
-(async () => {
-     try {
-          await connectDB();
-          // Start server
-     app.listen(PORT, () =>{
-          console.log(`✅ Server is running at port: ${PORT}`);
-          console.log(`Server URL: http://localhost:${PORT}`);
-          console.log(`Health Check: http://localhost:${PORT}/health`);
-     });
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Blog API is running' });
+});
 
-     app.on("error", (err) => {
-          console.error("❌ WARNING!!! Express App error:", err);
-          throw err;
-     });
-     } catch (err) {
-          console.error("❌WARNING!!! MongoDB Database Connection FAILED!!!", err);
-          process.exit(1);
-     }
-})();
+// Error handling middleware
+// app.use(errorHandler);
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
