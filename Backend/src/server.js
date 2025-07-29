@@ -1,12 +1,14 @@
 // server.js
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+import express from "express";
+// import mongoose from "mongoose";
+import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import dotenv from "dotenv";
 
-// const authRoutes = require('./src/routes/auth.route');
+dotenv.config();
+
+import authRoutes from "./routes/auth.route.js";
 // const blogRoutes = require('./routes/blogs');
 // const commentRoutes = require('./routes/comments');
 // const errorHandler = require('./middleware/errorHandler');
@@ -28,16 +30,20 @@ app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/blog_app', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+// // Connect to MongoDB
+// mongoose.connect(process.env.MONGODB_URI, {
+//   useNewUrlParser: true,
+//   useUnifiedTopology: true,
+// })
+// .then(() => console.log('Connected to MongoDB'))
+// .catch(
+//   (err) => {
+//     console.error('MongoDB connection error:', err);
+//     process.exit(1);
+//   });
 
 // Routes
-// app.use('/api/auth', authRoutes);
+app.use("/api/auth", authRoutes);
 // app.use('/api/blogs', blogRoutes);
 // app.use('/api/comments', commentRoutes);
 
@@ -55,9 +61,10 @@ app.get('/health', (req, res) => {
 // app.use(errorHandler);
 
 // 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
+
+// app.use('*', (req, res) => {
+//   res.status(404).json({ error: 'Route not found' });
+// });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
