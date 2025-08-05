@@ -1,5 +1,5 @@
 // models/Comment.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const commentSchema = new mongoose.Schema({
   blogId: {
@@ -50,4 +50,4 @@ commentSchema.index({ blogId: 1, createdAt: -1 });
 commentSchema.index({ parentComment: 1 });
 commentSchema.index({ author: 1 });
 
-module.exports = mongoose.model('Comment', commentSchema);
+export const Comment = mongoose.model('Comment', commentSchema);

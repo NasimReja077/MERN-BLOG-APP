@@ -1,5 +1,5 @@
 // models/Blog.js
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const blogSchema = new mongoose.Schema({
   title: {
@@ -88,4 +88,4 @@ blogSchema.index({ category: 1 });
 blogSchema.index({ 'views.count': -1 });
 blogSchema.index({ 'likes.count': -1 });
 
-module.exports = mongoose.model('Blog', blogSchema);
+export const Blog = mongoose.model('Blog', blogSchema);

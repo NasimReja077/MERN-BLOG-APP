@@ -9,9 +9,10 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import authRoutes from "./routes/auth.route.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 // const blogRoutes = require('./routes/blogs');
 // const commentRoutes = require('./routes/comments');
-// const errorHandler = require('./middleware/errorHandler');
+
 
 const app = express();
 
@@ -58,7 +59,7 @@ app.get('/health', (req, res) => {
 });
 
 // Error handling middleware
-// app.use(errorHandler);
+app.use(errorHandler);
 
 // 404 handler
 
