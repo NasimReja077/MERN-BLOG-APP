@@ -1,6 +1,3 @@
-Below is the converted document in GitHub-flavored Markdown format, preserving the structure and content of the provided API documentation and setup instructions.
-
-```markdown
 # Blog API Documentation
 
 ## Environment Variables (.env)
