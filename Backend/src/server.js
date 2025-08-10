@@ -9,6 +9,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import authRoutes from "./routes/auth.route.js";
+import blogRoutes from "./routes/blogs.route.js";
+import commentRoutes from "./routes/comments.route.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 // const blogRoutes = require('./routes/blogs');
 // const commentRoutes = require('./routes/comments');
@@ -45,8 +47,8 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 // Routes
 app.use("/api/auth", authRoutes);
-// app.use('/api/blogs', blogRoutes);
-// app.use('/api/comments', commentRoutes);
+app.use('/api/blogs', blogRoutes);
+app.use('/api/comments', commentRoutes);
 
 app.get('/test', (req, res) => {
   res.send('OK');

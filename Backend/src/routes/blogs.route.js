@@ -1,8 +1,9 @@
-const express = require('express');
-const Blog = require('../models/Blog.model.js');
-const Comment = require('../models/Comment');
-const auth = require('../middleware/auth.js');
-const { validate, schemas } = require('../middleware/validation.js');
+import express from "express";
+import { Blog } from "../models/Blog.model.js";
+import { Comment } from "../models/Comment.model.js";
+import { auth } from "../middleware/auth.js";
+import { validate, schemas } from "../middleware/validation.js";
+// const { validate, schemas } = require('../middleware/validation.js');
 
 const router = express.Router();
 
@@ -37,13 +38,13 @@ router.get('/', async (req, res) => {
       .limit(limit);
 
     const total = await Comment.countDocuments({ 
-      blogId, 
+      Blog, 
       parentComment: null,
       isDeleted: false 
     });
 
     res.json({
-      comments,
+      Comment,
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(total / limit),
@@ -350,7 +351,7 @@ router.get('/:blogId/comments', async (req, res) => {
     const total = await Blog.countDocuments(filter);
 
     res.json({
-      blogs,
+      Blog,
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(total / limit),
@@ -368,4 +369,4 @@ router.get('/:blogId/comments', async (req, res) => {
 });
 
 
-module.exports = router;
+export default router;

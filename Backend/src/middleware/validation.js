@@ -40,7 +40,8 @@ export const schemas = {
   }),
 
   comment: Joi.object({
-    content: Joi.string().max(1000).required()
+    content: Joi.string().max(1000).required(),
+    blogId: Joi.string().hex().length(24).required()
   }),
 
   share: Joi.object({

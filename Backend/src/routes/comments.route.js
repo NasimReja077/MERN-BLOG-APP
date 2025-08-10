@@ -1,8 +1,9 @@
-const express = require('express');
-const Comment = require('../models/Comment');
-const Blog = require('../models/Blog');
-const auth = require('../middleware/auth');
-const { validate, schemas } = require('../middleware/validation');
+import express from "express";
+
+import { Blog } from "../models/Blog.model.js";
+import { Comment } from "../models/Comment.model.js";
+import { auth } from "../middleware/auth.js";
+import { validate, schemas } from "../middleware/validation.js";
 
 const router = express.Router();
 
@@ -248,4 +249,4 @@ router.get('/:commentId/replies', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
