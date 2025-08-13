@@ -57,6 +57,48 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get blogs by user
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Validate userId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({
+        error: 'Invalid user ID'
+      });
+    }
+
+    const filter = { author: userId, status: 'published' };
+    const blogs = await Blog.find(filter)
+      .populate('author', 'username fullName avatar address mobile')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Blog.countDocuments(filter);
+
+    res.json({
+      blogs,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalBlogs: total,
+        hasNext: page < Math.ceil(total / limit),
+        hasPrev: page > 1
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Failed to fetch blogs',
+      message: error.message
+    });
+  }
+});
+
 // Get single blog
 router.get('/:id', async (req, res) => {
   try {

@@ -1,26 +1,25 @@
-// Backend/src/routes/auth.route.js 
 import express from "express";
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.model.js";
 import { auth } from "../middleware/auth.js";
 import { validate, schemas } from "../middleware/validation.js";
-// const { validate, schemas } = require('../middleware/validation');
+
 const router = express.Router();
 
 // Register user
 router.post('/register', validate(schemas.register), async (req, res) => {
   try {
-    const { username, email, password, fullName, bio } = req.body;
+    const { username, email, password, fullName, bio, address, mobile, aadhar } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
+      $or: [{ email }, { username }, { aadhar: aadhar && aadhar }]
     });
 
     if (existingUser) {
       return res.status(400).json({
         error: 'User already exists',
-        message: 'Email or username is already taken'
+        message: 'Email, username, or Aadhar number is already taken'
       });
     }
 
@@ -30,7 +29,10 @@ router.post('/register', validate(schemas.register), async (req, res) => {
       email,
       password,
       fullName,
-      bio
+      bio,
+      address,
+      mobile,
+      aadhar
     });
 
     await user.save();
@@ -106,13 +108,26 @@ router.get('/profile', auth, async (req, res) => {
 });
 
 // Update user profile
-router.put('/profile', auth, async (req, res) => {
+router.put('/profile', auth, validate(schemas.updateProfile), async (req, res) => {
   try {
-    const { fullName, bio, avatar } = req.body;
-    
+    const { fullName, bio, avatar, address, mobile, aadhar } = req.body;
+
+    // Check for Aadhar uniqueness if provided
+    if (aadhar) {
+      const existingUser = await User.findOne({
+        aadhar,
+        _id: { $ne: req.user._id }
+      });
+      if (existingUser) {
+        return res.status(400).json({
+          error: 'Aadhar number already taken'
+        });
+      }
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
-      { fullName, bio, avatar },
+      { fullName, bio, avatar, address, mobile, aadhar },
       { new: true, runValidators: true }
     );
 
@@ -127,6 +142,5 @@ router.put('/profile', auth, async (req, res) => {
     });
   }
 });
-
 
 export default router;

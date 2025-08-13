@@ -42,7 +42,7 @@ router.post('/', auth, validate(schemas.comment), async (req, res) => {
 });
 
 // Reply to comment
-router.post('/:commentId/reply', auth, validate(schemas.comment), async (req, res) => {
+router.post('/:commentId/reply', auth, validate(schemas.reply), async (req, res) => {
   try {
     const { commentId } = req.params;
     const { content } = req.body;

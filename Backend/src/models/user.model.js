@@ -35,6 +35,26 @@ const userSchema = new mongoose.Schema({
   bio: {
     type: String,
     maxlength: 500
+  },
+  address: {
+    type: String,
+    trim: true,
+    maxlength: 200,
+    default: null
+  },
+  mobile: {
+    type: String,
+    trim: true,
+    match: [/^\d{10}$/, 'Mobile number must be 10 digits'],
+    default: null
+  },
+  aadhar: {
+    type: String,
+    trim: true,
+    match: [/^\d{12}$/, 'Aadhar number must be 12 digits'],
+    unique: true,
+    sparse: true, // Allows null values while enforcing uniqueness for non-null values
+    default: null
   }
 }, {
   timestamps: true
@@ -43,6 +63,8 @@ const userSchema = new mongoose.Schema({
 // Index for performance
 userSchema.index({ username: 1 });
 userSchema.index({ email: 1 });
+userSchema.index({ aadhar: 1});
+
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
