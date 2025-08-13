@@ -1,18 +1,23 @@
-/ .env file
+# Blog API Documentation
+
+## Environment Variables (.env)
+
+```env
 NODE_ENV=development
 PORT=3000
 MONGODB_URI=mongodb://localhost:27017/blog_app
 JWT_SECRET=your_super_secret_jwt_key_here_make_it_long_and_secure
+```
 
-// Sample API Usage Documentation
+## Sample API Usage Documentation
 
-/*
-==============================================
-SAMPLE PAYLOADS FOR EACH ENDPOINT
-==============================================
+### Sample Payloads for Each Endpoint
 
-1. USER REGISTRATION
-POST /api/auth/register
+#### 1. User Registration
+**POST** `/api/auth/register`
+
+**Request Body:**
+```json
 {
   "username": "johndoe",
   "email": "john@example.com",
@@ -20,8 +25,10 @@ POST /api/auth/register
   "fullName": "John Doe",
   "bio": "Tech enthusiast and blogger"
 }
+```
 
-Response:
+**Response:**
+```json
 {
   "message": "User registered successfully",
   "user": {
@@ -36,15 +43,21 @@ Response:
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
+```
 
-2. USER LOGIN
-POST /api/auth/login
+#### 2. User Login
+**POST** `/api/auth/login`
+
+**Request Body:**
+```json
 {
   "email": "john@example.com",
   "password": "securepassword123"
 }
+```
 
-Response:
+**Response:**
+```json
 {
   "message": "Login successful",
   "user": {
@@ -55,10 +68,14 @@ Response:
   },
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
+```
 
-3. CREATE BLOG POST
-POST /api/blogs
-Headers: Authorization: Bearer <token>
+#### 3. Create Blog Post
+**POST** `/api/blogs`  
+**Headers:** `Authorization: Bearer <token>`
+
+**Request Body:**
+```json
 {
   "title": "Getting Started with Node.js",
   "content": "Node.js is a powerful runtime environment...",
@@ -68,8 +85,10 @@ Headers: Authorization: Bearer <token>
   "status": "published",
   "featuredImage": "https://example.com/image.jpg"
 }
+```
 
-Response:
+**Response:**
+```json
 {
   "message": "Blog created successfully",
   "blog": {
@@ -103,11 +122,13 @@ Response:
     "updatedAt": "2023-09-04T10:35:00.000Z"
   }
 }
+```
 
-4. GET ALL BLOGS (with pagination and filters)
-GET /api/blogs?page=1&limit=10&category=programming&sortBy=views&sortOrder=desc
+#### 4. Get All Blogs (with Pagination and Filters)
+**GET** `/api/blogs?page=1&limit=10&category=programming&sortBy=views&sortOrder=desc`
 
-Response:
+**Response:**
+```json
 {
   "blogs": [
     {
@@ -148,38 +169,52 @@ Response:
     "hasPrev": false
   }
 }
+```
 
-5. TRACK BLOG VIEW
-POST /api/blogs/64f5a1b2c8d9e0f1a2b3c4d6/view
+#### 5. Track Blog View
+**POST** `/api/blogs/64f5a1b2c8d9e0f1a2b3c4d6/view`
+
+**Request Body:**
+```json
 {
   "userId": "64f5a1b2c8d9e0f1a2b3c4d7"
 }
+```
 
-Response:
+**Response:**
+```json
 {
   "message": "View tracked successfully",
   "viewCount": 151,
   "uniqueViewCount": 3
 }
+```
 
-6. LIKE BLOG
-POST /api/blogs/64f5a1b2c8d9e0f1a2b3c4d6/like
-Headers: Authorization: Bearer <token>
+#### 6. Like Blog
+**POST** `/api/blogs/64f5a1b2c8d9e0f1a2b3c4d6/like`  
+**Headers:** `Authorization: Bearer <token>`
 
-Response:
+**Response:**
+```json
 {
   "message": "Blog liked successfully",
   "isLiked": true,
   "likeCount": 26
 }
+```
 
-7. TRACK BLOG SHARE
-POST /api/blogs/64f5a1b2c8d9e0f1a2b3c4d6/share
+#### 7. Track Blog Share
+**POST** `/api/blogs/64f5a1b2c8d9e0f1a2b3c4d6/share`
+
+**Request Body:**
+```json
 {
   "platform": "twitter"
 }
+```
 
-Response:
+**Response:**
+```json
 {
   "message": "Share tracked successfully",
   "shareCount": 6,
@@ -188,16 +223,22 @@ Response:
     {"platform": "facebook", "count": 2}
   ]
 }
+```
 
-8. ADD COMMENT TO BLOG
-POST /api/comments
-Headers: Authorization: Bearer <token>
+#### 8. Add Comment to Blog
+**POST** `/api/comments`  
+**Headers:** `Authorization: Bearer <token>`
+
+**Request Body:**
+```json
 {
   "content": "Great article! Very helpful for beginners.",
   "blogId": "64f5a1b2c8d9e0f1a2b3c4d6"
 }
+```
 
-Response:
+**Response:**
+```json
 {
   "message": "Comment added successfully",
   "comment": {
@@ -221,15 +262,21 @@ Response:
     "updatedAt": "2023-09-04T10:40:00.000Z"
   }
 }
+```
 
-9. REPLY TO COMMENT
-POST /api/comments/64f5a1b2c8d9e0f1a2b3c4d8/reply
-Headers: Authorization: Bearer <token>
+#### 9. Reply to Comment
+**POST** `/api/comments/64f5a1b2c8d9e0f1a2b3c4d8/reply`  
+**Headers:** `Authorization: Bearer <token>`
+
+**Request Body:**
+```json
 {
   "content": "Thanks for the feedback! Glad it helped."
 }
+```
 
-Response:
+**Response:**
+```json
 {
   "message": "Reply added successfully",
   "reply": {
@@ -253,11 +300,13 @@ Response:
     "updatedAt": "2023-09-04T10:42:00.000Z"
   }
 }
+```
 
-10. GET BLOG COMMENTS
-GET /api/blogs/64f5a1b2c8d9e0f1a2b3c4d6/comments?page=1&limit=20
+#### 10. Get Blog Comments
+**GET** `/api/blogs/64f5a1b2c8d9e0f1a2b3c4d6/comments?page=1&limit=20`
 
-Response:
+**Response:**
+```json
 {
   "comments": [
     {
@@ -299,28 +348,36 @@ Response:
     "hasPrev": false
   }
 }
+```
 
-11. LIKE COMMENT
-POST /api/comments/64f5a1b2c8d9e0f1a2b3c4d8/like
-Headers: Authorization: Bearer <token>
+#### 11. Like Comment
+**POST** `/api/comments/64f5a1b2c8d9e0f1a2b3c4d8/like`  
+**Headers:** `Authorization: Bearer <token>`
 
-Response:
+**Response:**
+```json
 {
   "message": "Comment liked successfully",
   "isLiked": true,
   "likeCount": 3
 }
+```
 
-12. UPDATE USER PROFILE
-PUT /api/auth/profile
-Headers: Authorization: Bearer <token>
+#### 12. Update User Profile
+**PUT** `/api/auth/profile`  
+**Headers:** `Authorization: Bearer <token>`
+
+**Request Body:**
+```json
 {
   "fullName": "John Smith",
   "bio": "Senior Software Developer and Tech Writer",
   "avatar": "https://example.com/avatar.jpg"
 }
+```
 
-Response:
+**Response:**
+```json
 {
   "message": "Profile updated successfully",
   "user": {
@@ -334,54 +391,70 @@ Response:
     "updatedAt": "2023-09-04T10:45:00.000Z"
   }
 }
+```
 
-==============================================
-INSTALLATION AND SETUP INSTRUCTIONS
-==============================================
+## Installation and Setup Instructions
 
 1. Initialize the project:
+   ```bash
    npm init -y
    npm install express mongoose bcryptjs jsonwebtoken joi cors helmet dotenv express-rate-limit
    npm install --save-dev nodemon
+   ```
 
 2. Create the folder structure:
+   ```bash
    mkdir models routes middleware
-   
-3. Create all the files as shown in the code above
+   ```
 
-4. Set up environment variables in .env file
+3. Create all the files as shown in the code above.
 
-5. Start MongoDB (make sure it's running on your system)
+4. Set up environment variables in `.env` file.
+
+5. Start MongoDB (make sure it's running on your system).
 
 6. Run the application:
-   npm run dev (for development)
-   npm start (for production)
+   ```bash
+   npm run dev  # for development
+   npm start    # for production
+   ```
 
-==============================================
-API TESTING WITH POSTMAN/CURL
-==============================================
+## API Testing with Postman/cURL
 
-Example CURL commands:
+### Example cURL Commands
 
-# Register user
+#### Register User
+```bash
 curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"username":"johndoe","email":"john@example.com","password":"securepassword123","fullName":"John Doe"}'
+```
 
-# Login user
+#### Login User
+```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"john@example.com","password":"securepassword123"}'
+```
 
-# Create blog (replace TOKEN with actual JWT token)
+#### Create Blog (Replace TOKEN with Actual JWT Token)
+```bash
 curl -X POST http://localhost:3000/api/blogs \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TOKEN" \
   -d '{"title":"My First Blog","content":"This is my first blog post","tags":["general"]}'
+```
 
-# Get all blogs
+#### Get All Blogs
+```bash
 curl -X GET http://localhost:3000/api/blogs
+```
 
-# Like a blog (replace BLOG_ID and TOKEN)
+#### Like a Blog (Replace BLOG_ID and TOKEN)
+```bash
 curl -X POST http://localhost:3000/api/blogs/BLOG_ID/like \
   -H "Authorization: Bearer TOKEN"
+```
+
+---
+This Markdown document is formatted for GitHub, using appropriate headers, code blocks, and lists to ensure clarity and readability. Let me know if you need further adjustments or additional sections!
