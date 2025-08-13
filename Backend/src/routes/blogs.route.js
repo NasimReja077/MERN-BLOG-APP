@@ -33,29 +33,25 @@ router.get('/', async (req, res) => {
 
     const blogs = await Blog.find(filter)
       .populate('author', 'username fullName avatar')
-      .sort({ createdAt: -1 })
+      .sort(sort)
       .skip(skip)
       .limit(limit);
 
-    const total = await Comment.countDocuments({ 
-      Blog, 
-      parentComment: null,
-      isDeleted: false 
-    });
+    const total = await Blog.countDocuments(filter); // count blog
 
     res.json({
-      Comment,
+      blogs, // return blog 
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(total / limit),
-        totalComments: total,
+        totalBlogs: total,
         hasNext: page < Math.ceil(total / limit),
         hasPrev: page > 1
       }
     });
   } catch (error) {
     res.status(500).json({
-      error: 'Failed to fetch comments',
+      error: 'Failed to fetch blog',
       message: error.message
     });
   }
@@ -322,51 +318,51 @@ router.post('/:id/share', validate(schemas.share), async (req, res) => {
   }
 });
 
-// Get blog comments
-router.get('/:blogId/comments', async (req, res) => {
-  try {
-    const { blogId } = req.params;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const skip = (page - 1) * limit;
+// // Get blog comments
+// router.get('/:blogId/comments', async (req, res) => {
+//   try {
+//     const { blogId } = req.params;
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = parseInt(req.query.limit) || 20;
+//     const skip = (page - 1) * limit;
 
-    // Get top-level comments (no parent)
-    const comments = await Comment.find({ 
-      blogId, 
-      parentComment: null,
-      isDeleted: false 
-    })
-      .populate('author', 'username fullName avatar')
-      .populate({
-        path: 'replies',
-        populate: {
-          path: 'author',
-          select: 'username fullName avatar'
-        }
-      })
-      .sort
-      .skip(skip)
-      .limit(limit);
+//     // Get top-level comments (no parent)
+//     const comments = await Comment.find({ 
+//       blogId, 
+//       parentComment: null,
+//       isDeleted: false 
+//     })
+//       .populate('author', 'username fullName avatar')
+//       .populate({
+//         path: 'replies',
+//         populate: {
+//           path: 'author',
+//           select: 'username fullName avatar'
+//         }
+//       })
+//       .sort
+//       .skip(skip)
+//       .limit(limit);
 
-    const total = await Blog.countDocuments(filter);
+//     const total = await Blog.countDocuments(filter);
 
-    res.json({
-      Blog,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(total / limit),
-        totalBlogs: total,
-        hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: 'Failed to fetch blogs',
-      message: error.message
-    });
-  }
-});
+//     res.json({
+//       Blog,
+//       pagination: {
+//         currentPage: page,
+//         totalPages: Math.ceil(total / limit),
+//         totalBlogs: total,
+//         hasNext: page < Math.ceil(total / limit),
+//         hasPrev: page > 1
+//       }
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       error: 'Failed to fetch blogs',
+//       message: error.message
+//     });
+//   }
+// });
 
 
 export default router;
