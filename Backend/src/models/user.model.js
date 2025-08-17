@@ -53,7 +53,7 @@ const userSchema = new mongoose.Schema({
     trim: true,
     match: [/^\d{12}$/, 'Aadhar number must be 12 digits'],
     unique: true,
-    sparse: true, // Allows null values while enforcing uniqueness for non-null values
+    sparse: true,
     default: null
   }
 }, {
