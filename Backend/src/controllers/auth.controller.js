@@ -138,3 +138,34 @@ export const updateProfile = async (req, res) => {
     });
   }
 };
+
+// Logout user
+export const logout = async (req, res) => {
+  try {
+    res.json({
+      message: 'Logout successful',
+      instructions: 'Please remove the token from client storage'
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Logout failed',
+      message: error.message
+    });
+  }
+};
+
+
+
+// // Logout user
+// export const logout = async (req, res) => {
+//   try {
+//     await User.findByIdAndUpdate(req.user._id, {
+//       lastLogout: new Date(),
+//     });
+//     res.cookie("jwt", "", { maxAge: 0 });
+//     res.status(200).json({ message: "Logged out successfully" });
+//   } catch (error) {
+//     console.log("Error in logout controller", error.message);
+//     res.status(500).json({ message: "Internal Server Error" });
+//   }
+// };

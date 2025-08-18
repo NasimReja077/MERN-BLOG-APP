@@ -63,7 +63,7 @@ export const schemas = {
     blogId: Joi.string().hex().length(24).required()
   }),
 
-   reply: Joi.object({
+  reply: Joi.object({
     content: Joi.string().max(1000).required()
   }),
   updateComment: Joi.object({

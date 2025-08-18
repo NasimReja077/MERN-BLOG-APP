@@ -2,14 +2,15 @@ import mongoose from "mongoose";
 import { Blog } from "../models/Blog.model.js";
 import { Comment } from "../models/Comment.model.js";
 import { User } from "../models/User.model.js";
-// Get all blogs with pagination
+
+// Get all blogs with pagination and comments
 export const getAllBlogs = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     
-    const { category, tag, author, sortBy, sortOrder } = req.query;
+    const { category, tag, author, sortBy, sortOrder, includeComments } = req.query;
     
     // Build filter object
     const filter = { status: 'published' };
@@ -32,22 +33,68 @@ export const getAllBlogs = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    const total = await Blog.countDocuments(filter); // count blog
+    // If includeComments is true, fetch comments for each blog
+    if (includeComments === 'true') {
+      const blogsWithComments = await Promise.all(
+        blogs.map(async (blog) => {
+          const comments = await Comment.find({
+            blogId: blog._id,
+            parentComment: null,
+            isDeleted: false,
+          })
+            .populate('author', 'username fullName avatar')
+            .populate({
+              path: 'replies',
+              match: { isDeleted: false },
+              populate: {
+                path: 'author',
+                select: 'username fullName avatar',
+              },
+            })
+            .sort({ createdAt: -1 })
+            .limit(5); // Limit to 5 recent comments per blog
+
+          return {
+            ...blog.toObject(),
+            comments: comments,
+            commentsCount: await Comment.countDocuments({
+              blogId: blog._id,
+              isDeleted: false,
+            }),
+          };
+        })
+      );
+
+      const total = await Blog.countDocuments(filter);
+
+      return res.json({
+        blogs: blogsWithComments,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(total / limit),
+          totalBlogs: total,
+          hasNext: page < Math.ceil(total / limit),
+          hasPrev: page > 1,
+        },
+      });
+    }
+
+    const total = await Blog.countDocuments(filter);
 
     res.json({
-      blogs, // return blog 
+      blogs,
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(total / limit),
         totalBlogs: total,
         hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1
-      }
+        hasPrev: page > 1,
+      },
     });
   } catch (error) {
     res.status(500).json({
-      error: 'Failed to fetch blog',
-      message: error.message
+      error: 'Failed to fetch blogs',
+      message: error.message,
     });
   }
 };
@@ -59,7 +106,7 @@ export const getBlogsByUser = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
-    const { status } = req.query; // Optional status filter
+    const { status, includeComments } = req.query; // Optional status filter
 
     // Validate userId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -93,6 +140,52 @@ export const getBlogsByUser = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
+    // If includeComments is true, fetch comments for each blog
+    if (includeComments === 'true') {
+      const blogsWithComments = await Promise.all(
+        blogs.map(async (blog) => {
+          const comments = await Comment.find({
+            blogId: blog._id,
+            parentComment: null,
+            isDeleted: false,
+          })
+            .populate('author', 'username fullName avatar')
+            .populate({
+              path: 'replies',
+              match: { isDeleted: false },
+              populate: {
+                path: 'author',
+                select: 'username fullName avatar',
+              },
+            })
+            .sort({ createdAt: -1 })
+            .limit(5); // Limit to 5 recent comments per blog
+
+          return {
+            ...blog.toObject(),
+            comments: comments,
+            commentsCount: await Comment.countDocuments({
+              blogId: blog._id,
+              isDeleted: false,
+            }),
+          };
+        })
+      );
+
+      const total = await Blog.countDocuments(filter);
+
+      return res.json({
+        blogs: blogsWithComments,
+        pagination: {
+          currentPage: page,
+          totalPages: Math.ceil(total / limit),
+          totalBlogs: total,
+          hasNext: page < Math.ceil(total / limit),
+          hasPrev: page > 1,
+        },
+      });
+    }
+
     const total = await Blog.countDocuments(filter);
 
     if (blogs.length === 0) {
@@ -120,7 +213,7 @@ export const getBlogsByUser = async (req, res) => {
   }
 };
 
-// Get single blog  
+// Get single blog with comments
 export const getBlogById = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id)
@@ -132,7 +225,35 @@ export const getBlogById = async (req, res) => {
       });
     }
 
-    res.json({ blog });
+    // Fetch comments for this blog
+    const comments = await Comment.find({
+      blogId: blog._id,
+      parentComment: null,
+      isDeleted: false,
+    })
+      .populate('author', 'username fullName avatar')
+      .populate({
+        path: 'replies',
+        match: { isDeleted: false },
+        populate: {
+          path: 'author',
+          select: 'username fullName avatar',
+        },
+      })
+      .sort({ createdAt: -1 });
+
+    const commentsCount = await Comment.countDocuments({
+      blogId: blog._id,
+      isDeleted: false,
+    });
+
+    res.json({
+      blog: {
+        ...blog.toObject(),
+        comments: comments,
+        commentsCount: commentsCount,
+      },
+    });
   } catch (error) {
     res.status(500).json({
       error: 'Failed to fetch blog',
@@ -375,53 +496,6 @@ export const trackBlogShare = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       error: 'Failed to track share',
-      message: error.message
-    });
-  }
-};
-
-
-// // Get blog comments
-export const getBlogComments = async (req, res) => {
-  try {
-    const { blogId } = req.params;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const skip = (page - 1) * limit;
-
-    // Get top-level comments (no parent)
-    const comments = await Comment.find({ 
-      blogId, 
-      parentComment: null,
-      isDeleted: false 
-    })
-      .populate('author', 'username fullName avatar')
-      .populate({
-        path: 'replies',
-        populate: {
-          path: 'author',
-          select: 'username fullName avatar'
-        }
-      })
-      .sort
-      .skip(skip)
-      .limit(limit);
-
-    const total = await Blog.countDocuments(filter);
-
-    res.json({
-      Blog,
-      pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(total / limit),
-        totalBlogs: total,
-        hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: 'Failed to fetch blogs',
       message: error.message
     });
   }

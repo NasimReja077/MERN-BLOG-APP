@@ -41,7 +41,7 @@ export const addComment = async (req, res) => {
       comment,
     });
   } catch (error) {
-    console.error("Error in addComment:", error); // Add logging for debugging
+    console.error("Error in addComment:", error);
     res.status(500).json({
       error: "Failed to add comment",
       message: error.message,
@@ -141,7 +141,7 @@ export const updateComment = async (req, res) => {
     const updatedComment = await Comment.findByIdAndUpdate(
       id,
       { content },
-      { new: true }
+      { new: true, runValidators: true }
     ).populate("author", "username fullName avatar");
 
     res.json({
@@ -363,6 +363,7 @@ export const getBlogComments = async (req, res) => {
           path: 'author',
           select: 'username fullName avatar',
         },
+        options: { sort: { createdAt: 1 } }, // Sort replies by oldest first
       })
       .sort({ createdAt: -1 }) // Newest comments first
       .skip(skip)

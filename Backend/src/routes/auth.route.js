@@ -1,7 +1,7 @@
 // Backend/routes/auth.route.js
 
 import express from "express";
-import{register, login, getProfile, updateProfile} from "../controllers/auth.controller.js"
+import{register, login, getProfile, updateProfile, logout} from "../controllers/auth.controller.js"
 import { auth } from "../middleware/auth.js";
 
 import { validate, schemas } from "../middleware/validation.js";
@@ -19,5 +19,9 @@ router.get("/profile", auth, getProfile);
 
 // Update user profile
 router.put("/profile", auth, validate(schemas.updateProfile), updateProfile);
+
+// Logout user
+router.post("/logout", auth, logout);
+
 
 export default router;

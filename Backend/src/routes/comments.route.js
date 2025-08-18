@@ -33,6 +33,6 @@ router.post("/:id/like", auth, likeComment);
 router.get("/:commentId/replies", getCommentReplies);
 
 // Get blog comments
-router.get("/:blogId/comments", getBlogComments);
+router.get("/blog/:blogId", getBlogComments);
 
 export default router;
