@@ -382,47 +382,47 @@ export const trackBlogShare = async (req, res) => {
 
 
 // // Get blog comments
-// export const getBlogComments = async (req, res) => {
-//   try {
-//     const { blogId } = req.params;
-//     const page = parseInt(req.query.page) || 1;
-//     const limit = parseInt(req.query.limit) || 20;
-//     const skip = (page - 1) * limit;
+export const getBlogComments = async (req, res) => {
+  try {
+    const { blogId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
 
-//     // Get top-level comments (no parent)
-//     const comments = await Comment.find({ 
-//       blogId, 
-//       parentComment: null,
-//       isDeleted: false 
-//     })
-//       .populate('author', 'username fullName avatar')
-//       .populate({
-//         path: 'replies',
-//         populate: {
-//           path: 'author',
-//           select: 'username fullName avatar'
-//         }
-//       })
-//       .sort
-//       .skip(skip)
-//       .limit(limit);
+    // Get top-level comments (no parent)
+    const comments = await Comment.find({ 
+      blogId, 
+      parentComment: null,
+      isDeleted: false 
+    })
+      .populate('author', 'username fullName avatar')
+      .populate({
+        path: 'replies',
+        populate: {
+          path: 'author',
+          select: 'username fullName avatar'
+        }
+      })
+      .sort
+      .skip(skip)
+      .limit(limit);
 
-//     const total = await Blog.countDocuments(filter);
+    const total = await Blog.countDocuments(filter);
 
-//     res.json({
-//       Blog,
-//       pagination: {
-//         currentPage: page,
-//         totalPages: Math.ceil(total / limit),
-//         totalBlogs: total,
-//         hasNext: page < Math.ceil(total / limit),
-//         hasPrev: page > 1
-//       }
-//     });
-//   } catch (error) {
-//     res.status(500).json({
-//       error: 'Failed to fetch blogs',
-//       message: error.message
-//     });
-//   }
-// };
+    res.json({
+      Blog,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(total / limit),
+        totalBlogs: total,
+        hasNext: page < Math.ceil(total / limit),
+        hasPrev: page > 1
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Failed to fetch blogs',
+      message: error.message
+    });
+  }
+};

@@ -1,6 +1,6 @@
 // Backend/routes/blogs.route.js
 import express from "express";
-import { getAllBlogs,getBlogsByUser,getBlogById,createBlog,updateBlog,deleteBlog,trackBlogView,likeBlog,trackBlogShare, } from "../controllers/blog.controller.js";
+import { getAllBlogs,getBlogsByUser,getBlogById,createBlog,updateBlog,deleteBlog,trackBlogView,likeBlog,trackBlogShare, getBlogComments} from "../controllers/blog.controller.js";
 import { auth } from "../middleware/auth.js";
 import { validate, schemas } from "../middleware/validation.js";
 // const { validate, schemas } = require('../middleware/validation.js');
@@ -35,7 +35,7 @@ router.post("/:id/like", auth, likeBlog);
 router.post("/:id/share", validate(schemas.share), trackBlogShare);
 
 // Get blog comments
-// router.get("/:blogId/comments", getBlogComments);
+router.get("/:blogId/comments", getBlogComments);
 
 
 export default router;
