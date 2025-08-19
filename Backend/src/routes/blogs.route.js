@@ -13,6 +13,7 @@ router.get("/", getAllBlogs);
 // Get user's blogs
 router.get("/user/:userId", getBlogsByUser);
 
+
 // Get single blog
 router.get("/:id", getBlogById);
 

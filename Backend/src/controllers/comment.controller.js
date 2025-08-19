@@ -9,23 +9,20 @@ export const addComment = async (req, res) => {
 
     // Validate blogId
     if (!mongoose.Types.ObjectId.isValid(blogId)) {
-      return res.status(400).json({
-        error: "Invalid blog ID",
-      });
-    }
+        return res.status(400).json({
+          error: "Invalid blog ID",
+          message: "The provided blogId is not a valid MongoDB ObjectId",
+        });
+      }
 
     // Check if blog exists and is published
     const blog = await Blog.findById(blogId);
-    if (!blog) {
-      return res.status(404).json({
-        error: "Blog not found",
-      });
-    }
-    if (blog.status !== "published") {
-      return res.status(403).json({
-        error: "Cannot comment on unpublished blog",
-      });
-    }
+      if (!blog || blog.status !== "published") {
+        return res.status(404).json({
+          error: "Blog not found or not published",
+          message: "The requested blog is either unpublished or does not exist",
+        });
+      }
 
     const comment = new Comment({
       blogId,
@@ -41,13 +38,14 @@ export const addComment = async (req, res) => {
       comment,
     });
   } catch (error) {
-    console.error("Error in addComment:", error);
+    console.error("Error in addComment:", error.message);
     res.status(500).json({
       error: "Failed to add comment",
       message: error.message,
     });
   }
 };
+
 
 // Reply to comment
 export const addReply = async (req, res) => {
@@ -57,23 +55,34 @@ export const addReply = async (req, res) => {
 
     // Validate commentId
     if (!mongoose.Types.ObjectId.isValid(commentId)) {
-      return res.status(400).json({
-        error: "Invalid comment ID",
-      });
-    }
+        return res.status(400).json({
+          error: "Invalid comment ID",
+          message: "The provided commentId is not a valid MongoDB ObjectId",
+        });
+      }
 
     // Check if parent comment exists and is not deleted
     const parentComment = await Comment.findById(commentId);
-    if (!parentComment) {
-      return res.status(404).json({
-        error: "Comment not found",
-      });
-    }
-    if (parentComment.isDeleted) {
-      return res.status(403).json({
-        error: "Cannot reply to deleted comment",
-      });
-    }
+      if (!parentComment) {
+        return res.status(404).json({
+          error: "Comment not found",
+          message: `No comment found with ID: ${commentId}`,
+        });
+      }
+      if (parentComment.isDeleted) {
+        return res.status(403).json({
+          error: "Cannot reply to deleted comment",
+          message: "The parent comment has been deleted",
+        });
+      }
+
+      // Limit reply depth (e.g., no replies to replies)
+      if (parentComment.parentComment) {
+        return res.status(400).json({
+          error: "Reply depth exceeded",
+          message: "Replies to replies are not allowed",
+        });
+      }
 
     const reply = new Comment({
       blogId: parentComment.blogId,
@@ -111,31 +120,34 @@ export const updateComment = async (req, res) => {
 
     // Validate commentId
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        error: "Invalid comment ID",
-      });
-    }
+        return res.status(400).json({
+          error: "Invalid comment ID",
+          message: "The provided commentId is not a valid MongoDB ObjectId",
+        });
+      }
 
     const comment = await Comment.findById(id);
-    if (!comment) {
-      return res.status(404).json({
-        error: "Comment not found",
-      });
-    }
+      if (!comment) {
+        return res.status(404).json({
+          error: "Comment not found",
+          message: `No comment found with ID: ${id}`,
+        });
+      }
 
     // Check if comment is deleted
     if (comment.isDeleted) {
-      return res.status(403).json({
-        error: "Cannot update deleted comment",
-      });
-    }
+        return res.status(403).json({
+          error: "Cannot update deleted comment",
+          message: "The comment has been deleted",
+        });
+      }
 
     // Check if user is the author
     if (comment.author.toString() !== req.user._id.toString()) {
-      return res.status(403).json({
-        error: "Access denied",
-        message: "You can only update your own comments",
-      });
+        return res.status(403).json({
+          error: "Access denied",
+          message: "You can only update your own comments",
+        });
     }
 
     const updatedComment = await Comment.findByIdAndUpdate(
@@ -149,7 +161,7 @@ export const updateComment = async (req, res) => {
       comment: updatedComment,
     });
   } catch (error) {
-    console.error("Error in updateComment:", error);
+    console.error("Error in updateComment:", error.message);
     res.status(500).json({
       error: "Failed to update comment",
       message: error.message,
@@ -166,6 +178,7 @@ export const deleteComment = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         error: "Invalid comment ID",
+        message: "The provided commentId is not a valid MongoDB ObjectId",
       });
     }
 
@@ -173,6 +186,7 @@ export const deleteComment = async (req, res) => {
     if (!comment) {
       return res.status(404).json({
         error: "Comment not found",
+        message: `No comment found with ID: ${id}`,
       });
     }
 
@@ -194,7 +208,7 @@ export const deleteComment = async (req, res) => {
       message: "Comment deleted successfully",
     });
   } catch (error) {
-    console.error("Error in deleteComment:", error);
+    console.error("Error in deleteComment:", error.message);
     res.status(500).json({
       error: "Failed to delete comment",
       message: error.message,
@@ -212,6 +226,7 @@ export const likeComment = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         error: "Invalid comment ID",
+        message: "The provided commentId is not a valid MongoDB ObjectId",
       });
     }
 
@@ -219,6 +234,7 @@ export const likeComment = async (req, res) => {
     if (!comment) {
       return res.status(404).json({
         error: "Comment not found",
+        message: `No comment found with ID: ${id}`,
       });
     }
 
@@ -226,6 +242,7 @@ export const likeComment = async (req, res) => {
     if (comment.isDeleted) {
       return res.status(403).json({
         error: "Cannot like deleted comment",
+        message: "The comment has been deleted",
       });
     }
 
@@ -260,7 +277,7 @@ export const likeComment = async (req, res) => {
       likeCount: updatedComment.likes.count,
     });
   } catch (error) {
-    console.error("Error in likeComment:", error);
+    console.error("Error in likeComment:", error.message);
     res.status(500).json({
       error: "Failed to process like",
       message: error.message,
@@ -280,6 +297,7 @@ export const getCommentReplies = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(commentId)) {
       return res.status(400).json({
         error: "Invalid comment ID",
+        message: "The provided commentId is not a valid MongoDB ObjectId",
       });
     }
 
@@ -288,6 +306,13 @@ export const getCommentReplies = async (req, res) => {
     if (!parentComment) {
       return res.status(404).json({
         error: "Comment not found",
+        message: `No comment found with ID: ${commentId}`,
+      });
+    }
+    if (parentComment.isDeleted) {
+      return res.status(403).json({
+        error: "Cannot fetch replies for deleted comment",
+        message: "The parent comment has been deleted",
       });
     }
 
@@ -300,7 +325,7 @@ export const getCommentReplies = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    const total = await Comment.countDocuments({
+    const totalReplies = await Comment.countDocuments({
       parentComment: commentId,
       isDeleted: false,
     });
@@ -309,14 +334,14 @@ export const getCommentReplies = async (req, res) => {
       replies,
       pagination: {
         currentPage: page,
-        totalPages: Math.ceil(total / limit),
-        totalReplies: total,
-        hasNext: page < Math.ceil(total / limit),
+        totalPages: Math.ceil(totalReplies / limit),
+        totalReplies,
+        hasNext: page < Math.ceil(totalReplies / limit),
         hasPrev: page > 1,
       },
     });
   } catch (error) {
-    console.error("Error in getCommentReplies:", error);
+    console.error("Error in getCommentReplies:", error.message);
     res.status(500).json({
       error: "Failed to fetch replies",
       message: error.message,
@@ -342,10 +367,10 @@ export const getBlogComments = async (req, res) => {
 
     // Check if blog exists and is published
     const blog = await Blog.findById(blogId);
-    if (!blog || blog.status !== 'published') {
+    if (!blog || blog.status !== "published") {
       return res.status(404).json({
-        error: 'Blog not found or not published',
-        message: `No published blog found with ID: ${blogId}`,
+        error: "Blog not found or not published",
+        message: "The requested blog is either unpublished or does not exist",
       });
     }
 
@@ -363,32 +388,30 @@ export const getBlogComments = async (req, res) => {
           path: 'author',
           select: 'username fullName avatar',
         },
-        options: { sort: { createdAt: 1 } }, // Sort replies by oldest first
+        options: { sort: { createdAt: 1 }, limit: 5 }, // Sort replies by oldest first
       })
       .sort({ createdAt: -1 }) // Newest comments first
       .skip(skip)
       .limit(limit);
 
-    const total = await Comment.countDocuments({
+    const totalComments = await Comment.countDocuments({
       blogId,
       parentComment: null,
       isDeleted: false,
     });
 
-    console.log(`Fetched ${comments.length} comments for blog: ${blogId}`);
-
     res.json({
       comments,
       pagination: {
         currentPage: page,
-        totalPages: Math.ceil(total / limit),
-        totalComments: total,
-        hasNext: page < Math.ceil(total / limit),
+        totalPages: Math.ceil(totalComments / limit),
+        totalComments,
+        hasNext: page < Math.ceil(totalComments / limit),
         hasPrev: page > 1,
       },
     });
   } catch (error) {
-    console.error('Error in getBlogComments:', error);
+    console.error('Error in getBlogComments:', error.message);
     res.status(500).json({
       error: 'Failed to fetch comments',
       message: error.message,
