@@ -5,8 +5,7 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
-
-dotenv.config();
+import cookieParser from "cookie-parser";
 
 import authRoutes from "./routes/auth.route.js";
 import blogRoutes from "./routes/blogs.route.js";
@@ -14,13 +13,24 @@ import commentRoutes from "./routes/comments.route.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 // const blogRoutes = require('./routes/blogs');
 // const commentRoutes = require('./routes/comments');
+import { connectDB } from "./db/connectDB.js";
 
+dotenv.config();
 
 const app = express();
 
 // Security middleware
 app.use(helmet());
-app.use(cors());
+
+
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  credentials: true
+}));
+
+
+app.use(cookieParser());
+
 
 // Rate limiting
 const limiter = rateLimit({
@@ -29,21 +39,12 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch(
-  (err) => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
-  });
+connectDB();
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -54,22 +55,23 @@ app.get('/test', (req, res) => {
   res.send('OK');
 });
 
-
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', message: 'Blog API is running' });
 });
 
+
 // Error handling middleware
 app.use(errorHandler);
 
-// 404 handler
 
+// 404 handler
 // app.use('*', (req, res) => {
 //   res.status(404).json({ error: 'Route not found' });
 // });
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

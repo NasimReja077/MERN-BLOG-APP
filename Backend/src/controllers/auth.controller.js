@@ -1,15 +1,16 @@
 // Backend/src/controllers/auth.controller.js
-import jwt from "jsonwebtoken";
 import { User } from "../models/User.model.js";
+import { generateToken } from "../utils/generateToken.js"
 
 // Register user
 export const register = async (req, res) => {
+
   try {
     const { username, email, password, fullName, bio, address, mobile, aadhar } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
-      $or: [{ email }, { username }, { aadhar: aadhar && aadhar }]
+      $or: [{ email }, { username }, { aadhar: aadhar && aadhar }],
     });
 
     if (existingUser) {
@@ -19,36 +20,34 @@ export const register = async (req, res) => {
       });
     }
 
-    // Create new user
+    // Create new user (password hashing handled by User model pre-save hook)
     const user = new User({
       username,
       email,
-      password,
+      password, // Plaintext password, hashed by pre-save hook
       fullName,
       bio,
       address,
       mobile,
-      aadhar
+      aadhar,
     });
-
+    
     await user.save();
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: '1d' }
-    );
+
+    // Generate and set JWT token
+    const token = generateToken(user._id, res);
 
     res.status(201).json({
-      message: 'User registered successfully',
-      user,
-      token
+      message: "User registered successfully",
+      user: user.toJSON(), // Removes password via toJSON method
+      token,
     });
+
   } catch (error) {
     res.status(500).json({
       error: 'Registration failed',
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -76,17 +75,13 @@ export const login = async (req, res) => {
       });
     }
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: '7d' }
-    );
+    // Generate and set JWT token
+    const token = generateToken(user._id, res);
 
     res.json({
       message: 'Login successful',
-      user,
-      token
+      user: user.toJSON(), // Remove password
+      token,
     });
   } catch (error) {
     res.status(500).json({
@@ -96,12 +91,39 @@ export const login = async (req, res) => {
   }
 };
 
+
+// Logout user
+export const logout = async (req, res) => {
+  try {
+    res.cookie("jwt", "", { maxAge: 0});
+    res.status(200).json({ message: "Logged out Successfully" });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Logout failed',
+      message: error.message,
+    });
+  }
+};
+
 // Get user profile
 export const getProfile = async (req, res) => {
-  res.json({
-    user: req.user
-  });
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json({
+      message: "Profile retrieved successfully",
+      user: user.toJSON(), // Removes password
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to retrieve profile",
+      message: error.message,
+    });
+  }
 };
+
 
 // Update user profile
 export const updateProfile = async (req, res) => {
@@ -127,10 +149,10 @@ export const updateProfile = async (req, res) => {
       { new: true, runValidators: true }
     );
 
-    res.json({
-      message: 'Profile updated successfully',
-      user: updatedUser
-    });
+     res.json({
+        message: "Profile updated successfully",
+        user: updatedUser.toJSON(), // Removes password
+      });
   } catch (error) {
     res.status(500).json({
       error: 'Profile update failed',
@@ -138,34 +160,3 @@ export const updateProfile = async (req, res) => {
     });
   }
 };
-
-// Logout user
-export const logout = async (req, res) => {
-  try {
-    res.json({
-      message: 'Logout successful',
-      instructions: 'Please remove the token from client storage'
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: 'Logout failed',
-      message: error.message
-    });
-  }
-};
-
-
-
-// // Logout user
-// export const logout = async (req, res) => {
-//   try {
-//     await User.findByIdAndUpdate(req.user._id, {
-//       lastLogout: new Date(),
-//     });
-//     res.cookie("jwt", "", { maxAge: 0 });
-//     res.status(200).json({ message: "Logged out successfully" });
-//   } catch (error) {
-//     console.log("Error in logout controller", error.message);
-//     res.status(500).json({ message: "Internal Server Error" });
-//   }
-// };

@@ -7,7 +7,7 @@ export const validate = (schema) => {
     if (error) {
       return res.status(400).json({
         error: 'Validation error',
-        details: error.details.map(detail => detail.message)
+        details: error.details.map(detail => detail.message),
       });
     }
     next();
@@ -23,12 +23,19 @@ export const schemas = {
     fullName: Joi.string().max(100),
     bio: Joi.string().max(500),
     address: Joi.string().max(200).allow(null),
-    mobile: Joi.string().pattern(/^\d{10}$/).allow(null).messages({
-      'string.pattern.base': 'Mobile number must be 10 digits'
+    mobile: Joi.string()
+    .pattern(/^\d{10}$/)
+    .allow(null)
+    .messages({
+      "string.pattern.base": "Mobile number must be 10 digits",
     }),
-    aadhar: Joi.string().pattern(/^\d{12}$/).allow(null).messages({
-      'string.pattern.base': 'Aadhar number must be 12 digits'
-    })
+    aadhar: Joi.string()
+    .pattern(/^\d{12}$/)
+    .allow(null)
+    .messages({
+      "string.pattern.base": "Aadhar number must be 12 digits",
+    }),
+
   }),
 
   login: Joi.object({
@@ -40,12 +47,18 @@ export const schemas = {
     bio: Joi.string().max(500).allow(null),
     avatar: Joi.string().uri().allow(null),
     address: Joi.string().max(200).allow(null),
-    mobile: Joi.string().pattern(/^\d{10}$/).allow(null).messages({
-      'string.pattern.base': 'Mobile number must be 10 digits'
+    mobile: Joi.string()
+    .pattern(/^\d{10}$/)
+    .allow(null)
+    .messages({
+      "string.pattern.base": "Mobile number must be 10 digits",
     }),
-    aadhar: Joi.string().pattern(/^\d{12}$/).allow(null).messages({
-      'string.pattern.base': 'Aadhar number must be 12 digits'
-    })
+    aadhar: Joi.string()
+    .pattern(/^\d{12}$/)
+    .allow(null)
+    .messages({
+      "string.pattern.base": "Aadhar number must be 12 digits",
+    }),
   }),
 
   blog: Joi.object({
