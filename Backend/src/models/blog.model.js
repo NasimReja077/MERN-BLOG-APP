@@ -2,44 +2,58 @@
 import mongoose from 'mongoose';
 
 const blogSchema = new mongoose.Schema({
+
   title: {
     type: String,
     required: true,
     trim: true,
     maxlength: 200
   },
+
   content: {
     type: String,
     required: true
   },
+
   summary: {
     type: String,
     maxlength: 500
   },
+
   author: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
+
   tags: [{
     type: String,
     trim: true,
     lowercase: true
   }],
+
   category: {
     type: String,
     trim: true,
     default: 'general'
   },
+
+  thumbnail: {
+    type: String,
+    default: null
+  },
+
+  featuredImages: [{
+    type: String,
+    default: null
+  }],
+
   status: {
     type: String,
     enum: ['draft', 'published'],
     default: 'published'
   },
-  featuredImage: {
-    type: String,
-    default: null
-  },
+
   views: {
     count: {
       type: Number,

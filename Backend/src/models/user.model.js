@@ -32,6 +32,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  coverImage: {
+    type: String,
+    default: null
+  },
   bio: {
     type: String,
     maxlength: 500
