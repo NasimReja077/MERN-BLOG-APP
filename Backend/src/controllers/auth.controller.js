@@ -4,7 +4,6 @@ import { generateToken } from "../utils/generateToken.js";
 import {deleteFromCloudinary, uploadToCloudinary} from "../middleware/uploadHandler.js";
 import { CLOUDINARY_FOLDERS } from "../config/cloudinary.js";
 
-
 // Register user
 export const register = async (req, res) => {
 
@@ -72,6 +71,8 @@ export const register = async (req, res) => {
   }
 };
 
+
+
 // Login user
 export const login = async (req, res) => {
   try {
@@ -112,6 +113,8 @@ export const login = async (req, res) => {
 };
 
 
+
+
 // Logout user
 export const logout = async (req, res) => {
   try {
@@ -146,6 +149,7 @@ export const getProfile = async (req, res) => {
     });
   }
 };
+
 
 
 // Update user profile
@@ -227,7 +231,6 @@ export const updateProfile = async (req, res) => {
 
 
 // uplod User Avatar
-
 export const uplodeUserAvatar = async(req, res) =>{
   //file uplod or not
   // Get current user
@@ -275,6 +278,7 @@ export const uplodeUserAvatar = async(req, res) =>{
 }
 
 // Upload Cover Image
+
 export const uploadUserCoverImage = async(req, res) =>{
   //file uplod or not
   // Get current user
@@ -320,3 +324,4 @@ export const uploadUserCoverImage = async(req, res) =>{
     });
   }
 }
+
