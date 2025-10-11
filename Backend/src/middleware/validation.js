@@ -1,3 +1,4 @@
+// Backend/middleware/validation.js
 // const Joi = require('joi');
 import Joi from 'joi';
 
@@ -35,13 +36,16 @@ export const schemas = {
     .messages({
       "string.pattern.base": "Aadhar number must be 12 digits",
     }),
-
+    
+    avatar: Joi.string().uri().allow(null), // Fixed: Added parentheses for uri()
+    coverImage: Joi.string().uri().allow(null), // Fixed: Added parentheses for uri()
   }),
 
   login: Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required()
   }),
+
   updateProfile: Joi.object({
     fullName: Joi.string().max(100).allow(null),
     bio: Joi.string().max(500).allow(null),
@@ -59,6 +63,8 @@ export const schemas = {
     .messages({
       "string.pattern.base": "Aadhar number must be 12 digits",
     }),
+    avatar: Joi.string().uri().allow(null), // Fixed: Added parentheses for uri()
+    coverImage: Joi.string().uri().allow(null), // Fixed: Added parentheses for uri()
   }),
 
   blog: Joi.object({
@@ -68,7 +74,7 @@ export const schemas = {
     tags: Joi.array().items(Joi.string()),
     category: Joi.string(),
     status: Joi.string().valid('draft', 'published'),
-    featuredImage: Joi.string().uri()
+    featuredImages: Joi.string().uri(),
   }),
 
   comment: Joi.object({
@@ -79,10 +85,14 @@ export const schemas = {
   reply: Joi.object({
     content: Joi.string().max(1000).required()
   }),
+
   updateComment: Joi.object({
     content: Joi.string().max(1000).required()
   }),
+
   share: Joi.object({
-    platform: Joi.string().valid('facebook', 'twitter', 'linkedin', 'whatsapp', 'email').required()
+    platform: Joi.string().valid('facebook', 'twitter', 'linkedin', 'whatsapp', 'email')
+    .required()
   })
+  
 };
