@@ -1,6 +1,9 @@
 // Backend/src/controllers/auth.controller.js
 import { User } from "../models/User.model.js";
-import { generateToken } from "../utils/generateToken.js"
+import { generateToken } from "../utils/generateToken.js";
+import {deleteFromCloudinary, uploadToCloudinary} from "../middleware/uploadHandler.js";
+import { CLOUDINARY_FOLDERS } from "../config/cloudinary.js";
+
 
 // Register user
 export const register = async (req, res) => {
@@ -20,6 +23,21 @@ export const register = async (req, res) => {
       });
     }
 
+    // Handle avatar and cover image uploads if provided
+    let avatarUrl = null;
+    let coverImageUrl = null;
+
+    if(req.file?.avatar?.[0]){
+      const avatarUpload = await uploadToCloudinary(req.files.avatar[0], CLOUDINARY_FOLDERS.AVATARS);
+      avatarUrl = avatarUpload.url;
+    }
+
+    if(req.file?.coverImage?.[0]){
+      const coverUplod = await uploadToCloudinary(req.files.coverImage[0], CLOUDINARY_FOLDERS.COVERS);
+      coverImageUrl = coverUplod.url;
+    }
+
+
     // Create new user (password hashing handled by User model pre-save hook)
     const user = new User({
       username,
@@ -30,6 +48,8 @@ export const register = async (req, res) => {
       address,
       mobile,
       aadhar,
+      avatar: avatarUrl,
+      coverImage: coverImageUrl,
     });
     
     await user.save();
@@ -108,13 +128,16 @@ export const logout = async (req, res) => {
 // Get user profile
 export const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized", message: "User not authenticated" });
+    }
+    const user = await User.findById(req.user._id).select("-password");
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
     res.json({
       message: "Profile retrieved successfully",
-      user: user.toJSON(), // Removes password
+      user,
     });
   } catch (error) {
     res.status(500).json({
@@ -128,7 +151,12 @@ export const getProfile = async (req, res) => {
 // Update user profile
 export const updateProfile = async (req, res) => {
   try {
-    const { fullName, bio, avatar, address, mobile, aadhar } = req.body;
+    console.log("req.user:", req.user); // debag
+    if (!req.user) {
+      return res.status(401).json({ error: "Unauthorized", message: "User not authenticated" });
+    }
+    // const { fullName, bio, avatar, address, mobile, aadhar } = req.body;
+    const { fullName, bio, address, mobile, aadhar, avatar, coverImage } = req.body;
 
     // Check for Aadhar uniqueness if provided
     if (aadhar) {
@@ -143,15 +171,51 @@ export const updateProfile = async (req, res) => {
       }
     }
 
+    // Handle avatar and cover image uploads or URLs
+    // let avatarUrl = req.user.avatar; // Error: req.user is undefined
+    let avatarUrl = req.user.avatar || null;
+    let coverImageUrl = req.user.coverImage || null;
+
+    if (req.files?.avatar?.[0]){
+      // Delete old avatar if it exists
+      if(req.user.avatar){
+        const publicId = req.user.avatar.split("/").pop().split(".")[0];
+        await deleteFromCloudinary(`${CLOUDINARY_FOLDERS.AVATARS}/${publicId}`);
+      }
+      const avatarUpload = await uploadToCloudinary(req.files.avatar[0], CLOUDINARY_FOLDERS.AVATARS);
+      
+      avatarUrl = avatarUpload.url;
+    }else if (avatar){
+      avatarUrl = avatar;
+    }
+
+
+    if(req.files?.coverImage?.[0]){
+      // Delete old cover image if it exists
+      if(req.user.coverImage){
+        const publicId = req.user.coverImage.split("/").pop().split(".")[0];
+        await deleteFromCloudinary(`${CLOUDINARY_FOLDERS.COVERS}/${publicId}`);
+      }
+      // const coverUplod = await uploadToCloudinary(req.file.coverImage[0], CLOUDINARY_FOLDERS.COVERS);
+      const coverUplod = await uploadToCloudinary(req.files.coverImage[0], CLOUDINARY_FOLDERS.COVERS);
+
+      coverImageUrl = coverUplod.url;
+    } else if(coverImage){
+      coverImageUrl = coverImage;
+    }
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
-      { fullName, bio, avatar, address, mobile, aadhar },
+      { fullName, bio, address, mobile, aadhar, avatar: avatarUrl, coverImage: coverImageUrl },
       { new: true, runValidators: true }
-    );
+    ).select("-password");
+
+    if(!updatedUser){
+      return res.status(404).json({ error: "User not found"});
+    }
 
      res.json({
         message: "Profile updated successfully",
-        user: updatedUser.toJSON(), // Removes password
+        user: updatedUser,
       });
   } catch (error) {
     res.status(500).json({
@@ -160,3 +224,99 @@ export const updateProfile = async (req, res) => {
     });
   }
 };
+
+
+// uplod User Avatar
+
+export const uplodeUserAvatar = async(req, res) =>{
+  //file uplod or not
+  // Get current user
+  // Upload new AvatarImage
+  // Delete old Avatar image if exists
+  // Update user with new Avatar image URL
+  try {
+    console.log('req.file:', req.file); //Debag
+    if (!req.file) {
+      return res.status(400).json({
+        error: "No file uploaded",
+        message: "Please select an image file to upload",
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+    if(!user){
+      return res.status(404).json({error: "User not Found"});
+    }
+
+    // Delete old avatar if it exists
+      if(user.avatar){
+        const publicId = user.avatar.split("/").pop().split(".")[0];
+        await deleteFromCloudinary(`${CLOUDINARY_FOLDERS.AVATARS}/${publicId}`);
+      }
+      // Upload new avatar
+      const avatarUpload = await uploadToCloudinary(req.file, CLOUDINARY_FOLDERS.AVATARS);
+
+      // Update user with new avatar URL
+      user.avatar = avatarUpload.url;
+      await user.save();
+
+      res.json({
+      message: "Avatar uploaded successfully",
+      user: user.toJSON(),
+    });
+
+  } catch (error) {
+    console.error("Error in uploadAvatarHandler:", error.message);
+    res.status(500).json({
+      error: "Failed to upload avatar",
+      message: error.message,
+    });
+  }
+}
+
+// Upload Cover Image
+export const uploadUserCoverImage = async(req, res) =>{
+  //file uplod or not
+  // Get current user
+  // Upload new CoverImage
+  // Delete old cover image if exists
+  // Update user with new cover image URL
+  try {
+    if (!req.file) {
+      console.log('req.file:', req.file); //Debag
+      return res.status(400).json({
+        error: "No file uploaded",
+        message: "Please select an image file to upload",
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+    if(!user){
+      return res.status(404).json({ error: "User not Found" });
+    }
+    // Delete old cover image if it exists
+    if (user.coverImage) {
+      const publicId = user.coverImage.split("/").pop().split(".")[0];
+      await deleteFromCloudinary(`${CLOUDINARY_FOLDERS.COVERS}/${publicId}`);
+    }
+    // Upload new cover image
+    const coverUpload = await uploadToCloudinary(req.file, CLOUDINARY_FOLDERS.COVERS);
+
+    // Update user with new cover image URL
+    user.coverImage = coverUpload.url;
+    await user.save();
+
+    
+    res.json({
+      message: "Cover image uploaded successfully",
+      user: user.toJSON(),
+    });
+
+  } catch (error) {
+    console.error("Error in uploadAvatarHandler:", error.message);
+    res.status(500).json({
+      error: "Failed to upload avatar",
+      message: error.message,
+    });
+  }
+}
