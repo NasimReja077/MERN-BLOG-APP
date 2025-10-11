@@ -1,5 +1,10 @@
+// Backend/src/config/multer.js
 import multer from 'multer';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const FILE_SIZE_LIMITS = {
   IMAGE: 5 * 1024 * 1024, // 5MB
@@ -8,7 +13,14 @@ export const FILE_SIZE_LIMITS = {
 const ALLOWED_IMAGE_TYPES = /jpeg|jpg|png|gif|webp/;
 
 const storage = multer.diskStorage({
-  destination: './public/uploads/', 
+  destination: (req, file, cb) => {
+    const uploadPath = path.join(__dirname, '../../public/uploads/');
+    cb(null, uploadPath);
+  },
+  // destination: './public/uploads/', 
+  // filename: (req, file, cb) => {
+  //   cb(null, `${Date.now()}@-${file.originalname}`);
+  // },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}@-${file.originalname}`);
   },

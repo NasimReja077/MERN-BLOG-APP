@@ -1,6 +1,5 @@
 // server.js
 import express from "express";
-import mongoose from "mongoose";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -11,9 +10,10 @@ import authRoutes from "./routes/auth.route.js";
 import blogRoutes from "./routes/blogs.route.js";
 import commentRoutes from "./routes/comments.route.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { connectDB } from "./db/connectDB.js";
 // const blogRoutes = require('./routes/blogs');
 // const commentRoutes = require('./routes/comments');
-import { connectDB } from "./db/connectDB.js";
+
 
 dotenv.config();
 
@@ -43,6 +43,7 @@ app.use(limiter);
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
 
 connectDB();
 
