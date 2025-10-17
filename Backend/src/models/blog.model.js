@@ -39,12 +39,17 @@ const blogSchema = new mongoose.Schema({
   },
 
   thumbnail: {
-    type: String,
+    type: String, // Store Cloudinary URL
     default: null
   },
 
-  featuredImages: [{
-    type: String,
+  // featuredImages: [{
+  //   type: String, // Store Cloudinary URLs
+  //   default: null
+  // }],
+
+  contentImages: [{
+    type: String, // Store Cloudinary URLs
     default: null
   }],
 
@@ -82,7 +87,7 @@ const blogSchema = new mongoose.Schema({
     platforms: [{
       platform: {
         type: String,
-        enum: ['facebook', 'twitter', 'linkedin', 'whatsapp', 'email']
+        enum: ['Facebook', 'Twitter', 'Linkedin', 'Instagram','Whatsapp', 'Other']
       },
       count: {
         type: Number,

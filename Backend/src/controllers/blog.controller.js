@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import { Blog } from "../models/Blog.model.js";
 import { Comment } from "../models/Comment.model.js";
 import { User } from "../models/User.model.js";
+import { CLOUDINARY_FOLDERS } from "../config/cloudinary.js";
+import { uploadToCloudinary, deleteFromCloudinary } from "../middleware/uploadHandler.js";
 
 // Get all blogs with pagination and comments
 export const getAllBlogs = async (req, res) => {
@@ -278,10 +280,47 @@ export const getBlogById = async (req, res) => {
 // Create new blog
 export const createBlog = async (req, res) => {
   try {
+    let thumbnailUrl = null;
+    let contentImagesUrls = [];
+
+    // Handle thumbnail upload
+    if(req.files?.thumbnail?.[0]){
+      const thumbnailUpload = await uploadToCloudinary(req.files.thumbnail[0], CLOUDINARY_FOLDERS.BLOG_THUMBNAILS);
+      thumbnailUrl = thumbnailUpload.url;
+    } else if(req.body.thumbnail){
+      thumbnailUrl = req.body.thumbnail;
+    }
+    // Handle content images upload (up to 10)
+
+    if(req.files?.contentImages){
+      if(req.files.contentImages.length > 10){
+        return res.status(400).join({
+          error: "Too many content images",
+          message: "Maximum 10 content images allowed",
+        });
+      }
+
+      for (const file of req.files.contentImages){
+        const imageUpload = await uploadContentThumbnail(file, CLOUDINARY_FOLDERS.BLOG_CONTENT)
+        contentImagesUrls.push(imageUpload.url);
+      }
+    }else if(req.body.contentImages){
+      contentImagesUrls = Array.isArray(req.body.contentImages) ? req.body.contentImages : [req.body.contentImages];
+      if (contentImagesUrls.length > 10){
+        return res.status(400).join({
+          error: "Too many content images",
+          message: "Maximum 10 content images allowed",
+        })
+      }
+    }
       const blogData = {
         ...req.body,
         author: req.user._id,
+        thumbnail: thumbnailUrl,
+        contentImages: contentImagesUrls,
+        tags: Array.isArray(req.body.tags) ? req.body.tags : (req.body.tags ? req.body.tags.split(",").map(tag => tag.trim()): []),
       };
+      console.log("Blog data:", blogData);
 
       const blog = new Blog(blogData);
       await blog.save();
@@ -302,6 +341,128 @@ export const createBlog = async (req, res) => {
 };
 
 
+export const uploadContentThumbnail = async(req, res) =>{
+  //file uplod or not
+  // Get current user
+  // Upload new thumbnail Image
+  // Delete old thumbnail image if exists
+  // Update user with new thumbnail image URL
+  try {
+     console.log('req.params:', req.params); // Debug params
+    console.log('req.file:', req.file); //Debug
+    if (!req.file) {
+      return res.status(400).json({
+        error: "No file uploaded",
+        message: "Please select an image file to upload",
+      });
+    }
+
+// find blog by id
+    const blog = await Blog.findById(req.params.id);
+    if(!blog){
+      console.log('Blog not found for id:', req.params.id); // Debug
+      return res.status(404).json({error: "Blog not Found"});
+    }
+
+    console.log('req.user._id:', req.user._id); // Debug user
+    console.log('blog.author:', blog.author); // Debug author
+
+    // check if user is the author of the blog
+    if(blog.author.toString() !== req.user._id.toString()){
+      return res.status(403).json({
+        error: "Access Denied",
+        message: "You can only upload thumbnail for your own blog",
+      });
+    };
+
+    // Delete old thumbnail if it exists
+    if (blog.thumbnail) {
+      const urlParts = blog.thumbnail.split("/");
+      const publicId = urlParts.slice(urlParts.length - 2).join("/").split(".")[0];
+      console.log('Deleting old thumbnail with publicId:', publicId); // Debug
+      await deleteFromCloudinary(publicId);
+    }
+      // Upload new thumbnail
+      const blogThumbnailsUpload = await uploadToCloudinary(req.file, CLOUDINARY_FOLDERS.BLOG_THUMBNAILS);
+
+      // Update blog with new thumbnail URL
+      blog.thumbnail = blogThumbnailsUpload.url;
+      await blog.save();
+
+      res.json({
+      message: "Thumbnail uploaded successfully",
+      blog: blog.toJSON(),
+    });
+
+  } catch (error) {
+    console.error("Error in uploadThumbnailHandler:", error.message);
+    res.status(500).json({
+      error: "Failed to upload thumbnail",
+      message: error.message,
+    });
+  }
+}
+
+export const uploadContentImages = async (req, res) => {
+  try {
+    console.log('req.files:', req.files); // Debug
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        error: "No files uploaded",
+        message: "Please select at least one image file to upload",
+      });
+    }
+
+    if (req.files.length > 10){
+      return res.status(400).join({
+        error: "Too many content images",
+        message: "Maximum 10 content images allowed",
+      })
+    }
+
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) {
+      return res.status(404).json({ error: "Blog not found" });
+    }
+
+    // Check if user is the author
+    if (blog.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        error: 'Access denied',
+        message: 'You can only update your own blog content images'
+      });
+    }
+
+    // upload mew content images
+    const contentImageUrls = [];
+    for (const file of req.files) {
+      const imageUpload = await uploadToCloudinary(file, CLOUDINARY_FOLDERS.BLOG_CONTENT);
+      contentImageUrls.push(imageUpload.url);
+    }
+    // Update blog with new content images
+    blog.contentImages = [...(blog.contentImages || []), ...contentImageUrls];
+    if(blog.contentImages.length > 10){
+      return res.status(400).json({
+        error: "Too many content images",
+        message: "Maximum 10 content images allowed",
+      });
+    }
+    await blog.save();
+    req.json({
+      message: "Content images uploaded successfully",
+      blog: blog.toJSON(),
+    });
+  } catch (error) {
+    console.error("Error in uploadContentImages:", error.message);
+    res.status(500).json({
+      error: "Failed to upload content images",
+      message: error.message,
+    });
+  }
+  };
+
+
 export const updateBlog = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
@@ -320,13 +481,62 @@ export const updateBlog = async (req, res) => {
       });
     }
 
+    let thumbnailUrl = blog.thumbnail;
+    let contentImagesUrls = blog.contentImages || [];
+
+
+    // Handle thumbnail upload or update
+    if(res.files?.thumbnail?.[0]){
+      if (blog.thumbnail) {
+        const publicId = blog.thumbnail.split("/").pop().split(".")[0];
+        await deleteFromCloudinary(`${CLOUDINARY_FOLDERS.BLOG_THUMBNAILS}/${publicId}`);
+      }
+      const thumbnailUpload = await uploadToCloudinary(req.files.thumbnail[0], CLOUDINARY_FOLDERS.BLOG_THUMBNAILS);
+      thumbnailUrl = thumbnailUpload.url;
+    }else if(req.body.thumbnail){
+      thumbnailUrl = req.body.thumbnail;
+    }
+
+    // Handle content images upload or update
+    if(req.files?.contentImages){
+      if(req.files.contentImages.length > 10){
+        return res.status(400).join({
+          error: "Too many content images",
+          message: "Maximum 10 content images allowed",
+        });
+      }
+      // Delete old content images
+      if(contentImagesUrls.length > 0){
+        for (const imageUrl of blog.contentImages){
+          const publicId = imageUrl.split("/").pop().split(".")[0];
+          await deleteFromCloudinary(`${CLOUDINARY_FOLDERS.BLOG_CONTENT}/${publicId}`);
+        }
+      }
+      contentImagesUrls = [];
+      for(const file of req.files.contentImages){
+        const imageUpload = await uploadToCloudinary(file, CLOUDINARY_FOLDERS.BLOG_CONTENT);
+        contentImagesUrls.push(imageUpload.url);
+      }
+    }else if(req.body.contentImages){
+      contentImagesUrls = Array.isArray(req.body.contentImages) ? req.body.contentImages : [req.body.contentImages];
+      if (contentImagesUrls.length > 10){
+        return res.status(400).json({
+          error: "Too Many content images",
+          message: "Maximum 10 content images allowed",
+        });
+      }
+    }
     const updatedBlog = await Blog.findByIdAndUpdate(
       req.params.id,
-      req.body,
-      { new: true, runValidators: true }
+      { 
+        ...req.body,
+        thumbnail: thumbnailUrl,
+        contentImages: contentImagesUrls,
+      },
+      {new: true, runValidators: true}
     ).populate('author', 'username fullName avatar');
 
-    res.json({
+     res.json({
       message: 'Blog updated successfully',
       blog: updatedBlog
     });
@@ -357,11 +567,24 @@ export const deleteBlog = async (req, res) => {
       });
     }
 
-    await Blog.findByIdAndDelete(req.params.id);
-    
+    // Delete thumbnail if exists
+    if(blog.thumbnail){
+      const publicId = blog.thumbnail.split("/").pop().split(".")[0];
+      await deleteFromCloudinary(`${CLOUDINARY_FOLDERS.BLOG_THUMBNAILS}/${publicId}`);
+    }
+
+    // Delete content images if exist
+    if(blog.contentImages && blog.contentImages.length > 0){
+      for(const imageUrl of blog.contentImages){
+        const publicId = imageUrl.split("/").pop().split(".")[0];
+        await deleteFromCloudinary(`${CLOUDINARY_FOLDERS.BLOG_CONTENT}/${publicId}`);
+      }
+    }
+
+    await Blog.findByIdAndDelete(req.params.id); 
     // Delete all comments for this blog
     await Comment.deleteMany({ blogId: req.params.id });
-
+    
     res.json({
       message: 'Blog deleted successfully'
     });
@@ -470,7 +693,7 @@ export const trackBlogShare = async (req, res) => {
     const blogId = req.params.id;
     const { platform } = req.body;
 
-    const validPlatforms = ['facebook', 'twitter', 'linkedin', 'whatsapp'];
+    const validPlatforms = ['Facebook', 'Twitter', 'Linkedin', 'Instagram','Whatsapp', 'Other'];
     if (!validPlatforms.includes(platform)) {
       return res.status(400).json({
         error: 'Invalid platform',

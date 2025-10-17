@@ -74,7 +74,8 @@ export const schemas = {
     tags: Joi.array().items(Joi.string()),
     category: Joi.string(),
     status: Joi.string().valid('draft', 'published'),
-    featuredImages: Joi.string().uri(),
+    thumbnail: Joi.string().uri().allow(null),
+    contentImages: Joi.array().items(Joi.string().uri()).max(10).allow(null),
   }),
 
   comment: Joi.object({
@@ -91,8 +92,7 @@ export const schemas = {
   }),
 
   share: Joi.object({
-    platform: Joi.string().valid('facebook', 'twitter', 'linkedin', 'whatsapp', 'email')
+    platform: Joi.string().valid('Facebook', 'Twitter', 'Linkedin', 'Instagram','Whatsapp', 'Other')
     .required()
   })
-  
 };

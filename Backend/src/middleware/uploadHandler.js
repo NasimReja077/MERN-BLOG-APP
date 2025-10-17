@@ -6,7 +6,8 @@ import fs from 'fs';
 export const uploadAvatar = upload.single('avatar');
 export const uploadCover = upload.single('cover');
 export const uploadBlogThumbnail = upload.single('thumbnail');
-export const uploadBlogContentImages = upload.array('contentImages', 10);
+export const uploadBlogContentImages = upload.array('contentImages', 10); // Max Up to 10 Images
+
 
 export const uploadToCloudinary = async (file, folder) =>{
      if(!file || !file.path){
