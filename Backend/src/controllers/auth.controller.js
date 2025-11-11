@@ -3,6 +3,7 @@ import { User } from "../models/User.model.js";
 import { generateToken } from "../utils/generateToken.js";
 import {deleteFromCloudinary, uploadToCloudinary} from "../middleware/uploadHandler.js";
 import { CLOUDINARY_FOLDERS } from "../config/cloudinary.js";
+import { sendVerificationEmail, sendWelcomeEmail } from "../mailer/emailService.js";
 
 // Register user
 export const register = async (req, res) => {
@@ -36,6 +37,8 @@ export const register = async (req, res) => {
       coverImageUrl = coverUplod.url;
     }
 
+    const verificatonCode = generateOTP();
+    const verificatonCodeExpires = Date.now() + 15 * 60 * 1000; // 15min
 
     // Create new user (password hashing handled by User model pre-save hook)
     const user = new User({
@@ -49,10 +52,14 @@ export const register = async (req, res) => {
       aadhar,
       avatar: avatarUrl,
       coverImage: coverImageUrl,
+      verificationCode,
+      verificationCodeExpires,
+      isVerified: false,
     });
     
     await user.save();
 
+    await sendVerificationEmail(user.email, verificatonCode);
 
     // Generate and set JWT token
     const token = generateToken(user._id, res);
@@ -71,7 +78,34 @@ export const register = async (req, res) => {
   }
 };
 
+export const verifyEmail = async (req, res) => {
+  const { code } = req.body;
+  try {
+    const user = await user.findOne({
+      verificationCode: code,
+      verificationCodeExpires: { $gt: Date.now()},
+    });
+    if(!user){
+      return res.status(400).json({ succes: false, message: "Invalid or expried verification code"})
+    }
+    user.isVerified = true;
+    user.verificationCode = undefined;
+    user.verificationCodeExpires = undefined;
+    await user.save();
+    await sendWelcomeEmail(user.email, user.name);
 
+    res.status(200).json({
+      succes: true,
+      message: "Email verfifysuccessfully"
+    })
+  } catch (error) {
+    console.log("Error in veryfiey Email", error);
+    res.status(500).json({
+      succes: false,
+      message: "Server Error"
+    });
+  }
+}
 
 // Login user
 export const login = async (req, res) => {
