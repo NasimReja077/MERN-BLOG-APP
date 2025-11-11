@@ -59,7 +59,21 @@ const userSchema = new mongoose.Schema({
     unique: true,
     sparse: true,
     default: null
-  }
+  },
+  verificationCode: {
+  type: String,
+  default: null
+},
+verificationCodeExpires: {
+  type: Date,
+  default: null
+},
+isVerified: {
+  type: Boolean,
+  default: false
+},
+resetPasswordToken: { type: String },
+resetPasswordExpires: { type: Date }
 }, {
   timestamps: true
 });
