@@ -3,11 +3,14 @@ import { User } from "../models/User.model.js";
 import { generateToken } from "../utils/generateToken.js";
 import {deleteFromCloudinary, uploadToCloudinary} from "../middleware/uploadHandler.js";
 import { CLOUDINARY_FOLDERS } from "../config/cloudinary.js";
-import { sendVerificationEmail, sendWelcomeEmail } from "../mailer/emailService.js";
+import { sendPasswordResetEmail, sendResetSuccessEmail, sendVerificationEmail, sendWelcomeEmail } from "../mailer/emailService.js";
+import { generateOTP } from "../utils/generateOTP.js";
+import crypto from "crypto";
+import { error } from "console";
+
 
 // Register user
 export const register = async (req, res) => {
-
   try {
     const { username, email, password, fullName, bio, address, mobile, aadhar } = req.body;
 
@@ -18,6 +21,7 @@ export const register = async (req, res) => {
 
     if (existingUser) {
       return res.status(400).json({
+        succes: false,
         error: 'User already exists',
         message: 'Email, username, or Aadhar number is already taken'
       });
@@ -37,8 +41,9 @@ export const register = async (req, res) => {
       coverImageUrl = coverUplod.url;
     }
 
-    const verificatonCode = generateOTP();
-    const verificatonCodeExpires = Date.now() + 15 * 60 * 1000; // 15min
+    // Generate OTP
+    const verificationCode = generateOTP();
+    const verificationCodeExpires = Date.now() + 15 * 60 * 1000; // 15min
 
     // Create new user (password hashing handled by User model pre-save hook)
     const user = new User({
@@ -59,51 +64,150 @@ export const register = async (req, res) => {
     
     await user.save();
 
-    await sendVerificationEmail(user.email, verificatonCode);
+    await sendVerificationEmail(user.email, verificationCode);
 
     // Generate and set JWT token
     const token = generateToken(user._id, res);
 
     res.status(201).json({
-      message: "User registered successfully",
+      succes: true,
+      message: "User registered successfully, Check email for OTP.",
       user: user.toJSON(), // Removes password via toJSON method
       token,
     });
 
   } catch (error) {
+    console.error("Rgistur Error:", error);
     res.status(500).json({
+      succes: false,
       error: 'Registration failed',
       message: error.message,
     });
   }
 };
 
-export const verifyEmail = async (req, res) => {
-  const { code } = req.body;
+export const verifyOTP = async (req, res) => {
   try {
-    const user = await user.findOne({
+    const { code } = req.body;
+
+    if(!code){
+      return res.status(400).json({ 
+        succes: false, 
+        message: "OTP is Requred"
+      });
+    }
+    const user = await User.findOne({
       verificationCode: code,
       verificationCodeExpires: { $gt: Date.now()},
     });
+
     if(!user){
-      return res.status(400).json({ succes: false, message: "Invalid or expried verification code"})
+      return res.status(400).json({ 
+        succes: false, 
+        message: "Invalid or expried OTP code",
+      });
     }
+
     user.isVerified = true;
     user.verificationCode = undefined;
     user.verificationCodeExpires = undefined;
     await user.save();
-    await sendWelcomeEmail(user.email, user.name);
+
+    await sendWelcomeEmail(user.username, user.email);
 
     res.status(200).json({
       succes: true,
-      message: "Email verfifysuccessfully"
-    })
+      message: "Email verified successfully"
+    });
   } catch (error) {
-    console.log("Error in veryfiey Email", error);
+    console.log("Error in veryfiey OTP", error);
     res.status(500).json({
       succes: false,
-      message: "Server Error"
+      message: error.message,
     });
+  }
+}
+
+// Password Reset Request
+export const forgotPasswordRequest = async (req, res) =>{
+  try {
+    const { email } = req.body;
+    if(!email){
+      return res.status(400).json({ 
+        succes: false, 
+        message: "Email is required" 
+      })
+    }
+    const user = await User.findOne({ email });
+    if(!user){
+      return res.status(404).json({
+        succes: false,
+        message: 'User not found with this email',
+      });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await user.save();
+
+    const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    await sendPasswordResetEmail(email, resetURL);
+    res.status(200).json({
+      succes: true,
+      message: "Password reset link sent to your email"
+    });
+  } catch (error) {
+    console.error('Forgot Password Resend verification error:', error);
+    res.status(500).json({
+      succes: false,
+      message: "Failed to send password reset link",
+      error: error.message,
+    })
+  }
+}
+
+//Reset Password Set
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if(!token || !newPassword){
+      return res.status(400).json({
+        succes: false,
+         message: "Token and new password are required"
+      });
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now()},
+    });
+
+    if(!user){
+      return res.status(400).json({
+        succes: false, 
+        message: "Invalid or expired token"
+      });
+    }
+
+    user.password = newPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+    await sendResetSuccessEmail (user.email, user.username);
+
+    res.status(200).json({
+      succes: true,
+      message: "Password reset successfully"
+    });
+  } catch (error) {
+    console.error("resetPassword error", error);
+    res.status(500).json({
+      succes: false,
+      message: "Password reset failde"
+    })
   }
 }
 
@@ -116,8 +220,9 @@ export const login = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
-        error: 'Invalid credentials',
-        message: 'Email or password is incorrect'
+        succes: false,
+        message: 'Email or password is incorrect',
+        error: error.message,
       });
     }
 
@@ -125,21 +230,24 @@ export const login = async (req, res) => {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({
-        error: 'Invalid credentials',
-        message: 'Email or password is incorrect'
+        succes: false,
+        message: 'Email or password is incorrect',
+        error: error.message,
       });
     }
 
     // Generate and set JWT token
     const token = generateToken(user._id, res);
 
-    res.json({
+    res.status(200).json({
+      succes: true,
       message: 'Login successful',
       user: user.toJSON(), // Remove password
       token,
     });
   } catch (error) {
     res.status(500).json({
+      succes: false,
       error: 'Login failed',
       message: error.message
     });
@@ -148,14 +256,17 @@ export const login = async (req, res) => {
 
 
 
-
 // Logout user
 export const logout = async (req, res) => {
   try {
     res.cookie("jwt", "", { maxAge: 0});
-    res.status(200).json({ message: "Logged out Successfully" });
+    res.status(200).json({ 
+      succes: true, 
+      message: "Logged out Successfully" 
+    });
   } catch (error) {
     res.status(500).json({
+      succes: false,
       error: 'Logout failed',
       message: error.message,
     });
@@ -172,12 +283,14 @@ export const getProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
-    res.json({
+    res.status(200).json({
+      succes: true, 
       message: "Profile retrieved successfully",
       user,
     });
   } catch (error) {
     res.status(500).json({
+      succes: false,
       error: "Failed to retrieve profile",
       message: error.message,
     });
@@ -191,7 +304,11 @@ export const updateProfile = async (req, res) => {
   try {
     console.log("req.user:", req.user); // debag
     if (!req.user) {
-      return res.status(401).json({ error: "Unauthorized", message: "User not authenticated" });
+      return res.status(401).json({ 
+        succes: false,
+        error: error.message, 
+        message: "User Unauthorized. Please log in first.",
+      });
     }
     // const { fullName, bio, avatar, address, mobile, aadhar } = req.body;
     const { fullName, bio, address, mobile, aadhar, avatar, coverImage } = req.body;
@@ -248,17 +365,24 @@ export const updateProfile = async (req, res) => {
     ).select("-password");
 
     if(!updatedUser){
-      return res.status(404).json({ error: "User not found"});
+      return res.status(404).json({ 
+        succes:false, 
+        // error: "User not found"
+        message: "User not found" 
+      });
     }
 
-     res.json({
+     res.status(200).json({
         message: "Profile updated successfully",
         user: updatedUser,
+        succes: true,      
       });
   } catch (error) {
+    console.error("Profile Update Error:", error);
     res.status(500).json({
-      error: 'Profile update failed',
-      message: error.message
+       success: false,
+      message: "Profile update failed",
+      error: error.message
     });
   }
 };
@@ -275,8 +399,9 @@ export const uplodeUserAvatar = async(req, res) =>{
     console.log('req.file:', req.file); //Debag
     if (!req.file) {
       return res.status(400).json({
-        error: "No file uploaded",
-        message: "Please select an image file to upload",
+        success: false,
+        message: "No file uploaded. Please select an image.",
+        error: error.message
       });
     }
 
@@ -297,16 +422,18 @@ export const uplodeUserAvatar = async(req, res) =>{
       user.avatar = avatarUpload.url;
       await user.save();
 
-      res.json({
-      message: "Avatar uploaded successfully",
-      user: user.toJSON(),
+      res.status(200).json({
+        succes: true,
+        message: "Avatar uploaded successfully",
+        user: user.toJSON(),
     });
 
   } catch (error) {
-    console.error("Error in uploadAvatarHandler:", error.message);
+    console.error("Upload Avatar Error:", error);
     res.status(500).json({
-      error: "Failed to upload avatar",
-      message: error.message,
+     success: false,
+      message: "Failed to upload avatar",
+      error: error.message
     });
   }
 }
@@ -323,14 +450,18 @@ export const uploadUserCoverImage = async(req, res) =>{
     if (!req.file) {
       console.log('req.file:', req.file); //Debag
       return res.status(400).json({
-        error: "No file uploaded",
+        succes: false,
         message: "Please select an image file to upload",
+        error: error.message, 
       });
     }
 
     const user = await User.findById(req.user._id);
     if(!user){
-      return res.status(404).json({ error: "User not Found" });
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
     }
     // Delete old cover image if it exists
     if (user.coverImage) {
@@ -345,7 +476,8 @@ export const uploadUserCoverImage = async(req, res) =>{
     await user.save();
 
     
-    res.json({
+    res.status(200).json({
+      succes: true,
       message: "Cover image uploaded successfully",
       user: user.toJSON(),
     });
@@ -353,6 +485,7 @@ export const uploadUserCoverImage = async(req, res) =>{
   } catch (error) {
     console.error("Error in uploadAvatarHandler:", error.message);
     res.status(500).json({
+      succes: false,
       error: "Failed to upload avatar",
       message: error.message,
     });
