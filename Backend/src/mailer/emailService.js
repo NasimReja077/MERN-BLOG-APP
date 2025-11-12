@@ -52,7 +52,7 @@ export const sendPasswordResetEmail = async (email, resetURL) => {
 export const sendResetSuccessEmail = async (email, username) => {
      const htmlContent = PASSWORD_RESET_SUCCESS_TEMPLATE
           .replace('{username}', username);
-     return sendEmail(email, "Password Reset Successful 🎉")
+     return sendEmail(email, "Password Reset Successful 🎉", htmlContent);
 }
 
 //Password Change Confirmation With IP
