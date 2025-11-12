@@ -1,6 +1,6 @@
 // Backend/routes/auth.route.js
 import express from "express";
-import{register, login, getProfile, updateProfile, logout, uplodeUserAvatar, uploadUserCoverImage} from "../controllers/auth.controller.js"
+import{register, login, getProfile, updateProfile, logout, uplodeUserAvatar, uploadUserCoverImage, verifyOTP, forgotPasswordRequest, resetPassword} from "../controllers/auth.controller.js"
 import { auth } from "../middleware/auth.js";
 
 import { validate, schemas } from "../middleware/validation.js";
@@ -19,14 +19,16 @@ const uploadProfileImages = upload.fields([
 // Register user
 router.post("/register", uploadProfileImages, validate(schemas.register), register);
 
+router.post("/otp-verify", verifyOTP);
 
 // Login user
 router.post("/login", validate(schemas.login), login);
 
+router.post("/forgot-password", forgotPasswordRequest);
+router.post("/reset-password", resetPassword);
 
 // Get user profile
 router.get("/profile", auth, getProfile);
-
 
 // Update user profile
 router.put("/profile", auth, uploadProfileImages, validate(schemas.updateProfile), updateProfile);
@@ -39,7 +41,7 @@ router.post("/logout", auth, logout);
 // Upload user avatar (single file upload)
 router.post("/upload/avatar", auth, uploadAvatar, uplodeUserAvatar );
 
-
 // Upload user cover image (single file upload)
 router.post("/upload/cover" , auth, uploadCover, uploadUserCoverImage);
+
 export default router;
