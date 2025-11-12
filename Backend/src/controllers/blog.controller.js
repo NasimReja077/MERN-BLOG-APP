@@ -294,7 +294,7 @@ export const createBlog = async (req, res) => {
 
     if(req.files?.contentImages){
       if(req.files.contentImages.length > 10){
-        return res.status(400).join({
+        return res.status(400).json({
           error: "Too many content images",
           message: "Maximum 10 content images allowed",
         });
@@ -307,7 +307,7 @@ export const createBlog = async (req, res) => {
     }else if(req.body.contentImages){
       contentImagesUrls = Array.isArray(req.body.contentImages) ? req.body.contentImages : [req.body.contentImages];
       if (contentImagesUrls.length > 10){
-        return res.status(400).join({
+        return res.status(400).json({
           error: "Too many content images",
           message: "Maximum 10 content images allowed",
         })
@@ -341,67 +341,88 @@ export const createBlog = async (req, res) => {
 };
 
 
-export const uploadContentThumbnail = async(req, res) =>{
-  //file uplod or not
-  // Get current user
-  // Upload new thumbnail Image
-  // Delete old thumbnail image if exists
-  // Update user with new thumbnail image URL
+export const uploadContentThumbnail = async (arg1, arg2) => {
+  // Dual-purpose function:
+  // - helper: uploadContentThumbnail(file, folder) -> returns upload result
+  // - express handler: uploadContentThumbnail(req, res) -> handles request/response
   try {
-     console.log('req.params:', req.params); // Debug params
-    console.log('req.file:', req.file); //Debug
-    if (!req.file) {
-      return res.status(400).json({
+    // Helper mode: (file, folder)
+    if (arg2 && typeof arg2 === "string") {
+      const file = arg1;
+      const folder = arg2;
+      if (!file) throw new Error("No file provided for upload");
+      const uploadResult = await uploadToCloudinary(file, folder);
+      return uploadResult;
+    }
+
+    // Handler mode: (req, res)
+    const reqObj = arg1;
+    const resObj = arg2;
+
+    console.log("req.params:", reqObj.params);
+    console.log("req.files:", reqObj.files);
+    console.log("req.file:", reqObj.file);
+
+    // Support both multer single and fields configuration
+    const file = (reqObj.files && reqObj.files.thumbnail && reqObj.files.thumbnail[0]) || reqObj.file;
+    if (!file) {
+      return resObj.status(400).json({
         error: "No file uploaded",
         message: "Please select an image file to upload",
       });
     }
 
-// find blog by id
-    const blog = await Blog.findById(req.params.id);
-    if(!blog){
-      console.log('Blog not found for id:', req.params.id); // Debug
-      return res.status(404).json({error: "Blog not Found"});
+    // find blog by id
+    const blog = await Blog.findById(reqObj.params.id);
+    if (!blog) {
+      console.log("Blog not found for id:", reqObj.params.id);
+      return resObj.status(404).json({ error: "Blog not Found" });
     }
 
-    console.log('req.user._id:', req.user._id); // Debug user
-    console.log('blog.author:', blog.author); // Debug author
+    console.log("req.user._id:", reqObj.user && reqObj.user._id);
+    console.log("blog.author:", blog.author);
 
     // check if user is the author of the blog
-    if(blog.author.toString() !== req.user._id.toString()){
-      return res.status(403).json({
+    if (blog.author.toString() !== reqObj.user._id.toString()) {
+      return resObj.status(403).json({
         error: "Access Denied",
         message: "You can only upload thumbnail for your own blog",
       });
-    };
-
-    // Delete old thumbnail if it exists
-    if (blog.thumbnail) {
-      const urlParts = blog.thumbnail.split("/");
-      const publicId = urlParts.slice(urlParts.length - 2).join("/").split(".")[0];
-      console.log('Deleting old thumbnail with publicId:', publicId); // Debug
-      await deleteFromCloudinary(publicId);
     }
-      // Upload new thumbnail
-      const blogThumbnailsUpload = await uploadToCloudinary(req.file, CLOUDINARY_FOLDERS.BLOG_THUMBNAILS);
 
-      // Update blog with new thumbnail URL
-      blog.thumbnail = blogThumbnailsUpload.url;
-      await blog.save();
+    // Delete old thumbnail if it exists. Use same publicId extraction as other places.
+    if (blog.thumbnail) {
+      const publicId = blog.thumbnail.split("/").pop().split(".")[0];
+      console.log("Deleting old thumbnail with publicId:", publicId);
+      await deleteFromCloudinary(`${CLOUDINARY_FOLDERS.BLOG_THUMBNAILS}/${publicId}`);
+    }
 
-      res.json({
+    // Upload new thumbnail
+    const blogThumbnailsUpload = await uploadToCloudinary(file, CLOUDINARY_FOLDERS.BLOG_THUMBNAILS);
+
+    // Update blog with new thumbnail URL
+    blog.thumbnail = blogThumbnailsUpload.url;
+    await blog.save();
+
+    return resObj.json({
       message: "Thumbnail uploaded successfully",
       blog: blog.toJSON(),
     });
-
   } catch (error) {
-    console.error("Error in uploadThumbnailHandler:", error.message);
-    res.status(500).json({
-      error: "Failed to upload thumbnail",
-      message: error.message,
-    });
+    // Decide how to respond depending on whether we're in handler mode
+    // If arg2 is a res-like object, use it; otherwise throw so caller can catch
+    if (arg2 && typeof arg2.json === "function") {
+      console.error("Error in uploadThumbnailHandler:", error.message);
+      return arg2.status(500).json({
+        error: "Failed to upload thumbnail",
+        message: error.message,
+      });
+    }
+
+    // Helper mode - rethrow so callers can handle
+    throw error;
   }
-}
+};
 
 export const uploadContentImages = async (req, res) => {
   try {
@@ -415,7 +436,7 @@ export const uploadContentImages = async (req, res) => {
     }
 
     if (req.files.length > 10){
-      return res.status(400).join({
+      return res.status(400).json({
         error: "Too many content images",
         message: "Maximum 10 content images allowed",
       })
@@ -449,7 +470,7 @@ export const uploadContentImages = async (req, res) => {
       });
     }
     await blog.save();
-    req.json({
+    res.json({
       message: "Content images uploaded successfully",
       blog: blog.toJSON(),
     });
