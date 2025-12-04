@@ -52,7 +52,7 @@ app.use("/api/auth", authRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/comments', commentRoutes);
 
-app.get('/test', (req, res) => {
+app.get('/api/test', (req, res) => {
   res.send('OK');
 });
 
