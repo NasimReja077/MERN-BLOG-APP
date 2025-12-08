@@ -6,6 +6,8 @@ const App =()=> {
       element: <Applayout/>,
       errorElement: <ErrorPage/>,
       children: [
+
+        // PUBLIC ROUTES
         {
           path: "/",
           element: <Home/>
@@ -15,24 +17,59 @@ const App =()=> {
           element: <Login/>
         },
         {
-          path: "/register",
-          element: <Register/>
+          path: "/signup",
+          element: <Signup/>
+        },
+        {
+          path: "/verify-email",
+          element: <VerifyEmail/>
+        },
+        {
+          path: "/forgot-password",
+          element: <ForgotPassword/>
+        },
+        {
+          path: "/reset-password/:token",
+          element: <ResetPassword/>
+        },
+        // BLOG (PUBLIC)
+        {
+          path: "/blog",
+          element: <BlogLists/>
+          loader: ({ params }) => fetchBlogs(params.id),
         },
         {
           path: "/blog/:id",
           element: <BlogDetail/>
-          loader: 
+          loader: ({ params }) => fetchBlogsById(params.id), 
         },
+        //*  PROTECTED ROUTES
         {
           path: "/profile",
           element: <Profile/>
           loader: 
         },
         {
-          path: "/create-blog",
+          path: "/profile/update", 
+          element: <UpdateProfile/>
+          loader: 
+        },
+        {
+          path: "/user/:id",
+          element: <OtherProfile />
+          loader: ({ params }) => fetchUserProfile(params.id),
+        },,
+        {
+          path: "/blogs/create",
           element: <CreateBlog/>
           action:
         },
+        {
+              path: "/blogs/edit/:id",
+              element: <EditBlog />,
+              loader: ({ params }) => fetchBlogById(params.id),
+              // action: editBlogAction,
+            },
 
         { // 2nd mathod for error page
           path: "*",
