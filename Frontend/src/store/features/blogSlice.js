@@ -53,7 +53,7 @@ export const fetchUserBlogs = createAsyncThunk(
      'blog/fetchUserBlogs',
      async ({ userId, params }, { rejectWithValue }) =>{
           try {
-               const data = await blogApi.getAllBlogsByUser(userId, params);
+               const data = await blogApi.getBlogsByUser(userId, params);
                return data;
           } catch (error) {
                return rejectWithValue(error.response?.data || error.message);
@@ -144,7 +144,11 @@ const blogSlice = createSlice({
                })
                .addCase(fetchBlogs.rejected, (state, action) =>{
                     state.loading = false;
-                    state.error = action.payload;
+                    // state.error = action.payload;
+                     // Only show error if it's not 401 (unauthorized = guest = normal)
+                    if (action.payload?.status !== 401) {
+                         state.error = action.payload?.message || "Failed to load blogs";
+                    }
                })
 
 
@@ -155,7 +159,7 @@ const blogSlice = createSlice({
                })
                .addCase(fetchBlogById.fulfilled, (state, action) =>{
                     state.loading = false;
-                    state.currentBlog = action.payload.blogs;
+                    state.currentBlog = action.payload.blog;
                })
                .addCase(fetchBlogById.rejected, (state, action) =>{
                     state.loading = false;
@@ -182,7 +186,7 @@ const blogSlice = createSlice({
                })
                .addCase(createBlog.fulfilled, (state, action) =>{
                     state.loading = false;
-                    state.blogs.unshift(action.payload.blogs);
+                    state.blogs.unshift(action.payload.blog);
                     toast.success = ('Blog Created Successfully!');
                })
                .addCase(createBlog.rejected, (state, action) =>{
