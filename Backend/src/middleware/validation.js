@@ -49,7 +49,6 @@ export const schemas = {
   updateProfile: Joi.object({
     fullName: Joi.string().max(100).allow(null),
     bio: Joi.string().max(500).allow(null),
-    avatar: Joi.string().uri().allow(null),
     address: Joi.string().max(200).allow(null),
     mobile: Joi.string()
     .pattern(/^\d{10}$/)
