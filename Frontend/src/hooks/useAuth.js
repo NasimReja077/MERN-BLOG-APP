@@ -1,17 +1,18 @@
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { getProfile } from '../store/features/authSlice'
+// import { getProfile } from '../store/features/authSlice'
 export const useAuth = () => {
-     const dispatch = useDispatch();
-     const { user, isAuthenticated, loading, token } = useSelector((state) => state.auth);
+     const { user, isAuthenticated, loading } = useSelector((state) => state.auth);
 
-     useEffect(() =>{
-          if (token && !user){
-               dispatch(getProfile());
-          }
-     }, [ token, user, dispatch ]);
-     return { user, isAuthenticated, loading}
+     // useEffect(() =>{
+     //      if (token && !user){
+     //           dispatch(getProfile());
+     //      }
+     // }, [ token, user, dispatch ]);
+     // return { user, isAuthenticated, loading}
+
+     return { user, isAuthenticated, loading };
 };
 
 export const useRequireAuth = () =>{
@@ -19,8 +20,9 @@ export const useRequireAuth = () =>{
      const { isAuthenticated, loading } = useAuth();
 
      useEffect(() =>{
-          if (!loading && !isAuthenticated){
-               navigate('/login');
+          if (loading) return;
+          if (!isAuthenticated){
+               navigate('/login', { replace: true });
           }
      }, [isAuthenticated, loading, navigate]);
 
