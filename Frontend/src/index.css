@@ -4,20 +4,10 @@
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
 body {
   min-height: 100vh;
-  /* background-color: #f3f6fa; */
-  /* color: black; */
+  background-color: #f3f6fa;
 }
-
-
 /* Loading spinner */
 .spinner {
   border: 3px solid rgba(76, 175, 80, 0.1);
@@ -25,7 +15,6 @@ body {
   border-top-color: #3de042;
   animation: spin 1s linear infinite;
 }
-
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
