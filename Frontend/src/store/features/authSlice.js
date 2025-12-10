@@ -6,9 +6,9 @@ import toast from 'react-hot-toast';
 // INITIAL STATE
 const initialState = {
      user: null,                                            
-     token: localStorage.getItem('token') || null,
-     isAuthenticated: !!localStorage.getItem('token'),
-     // isAuthenticated: false,
+     // token: localStorage.getItem('token') || null,
+     // isAuthenticated: !!localStorage.getItem('token'),
+     isAuthenticated: false,
      loading: false,
      error: null,
 };
@@ -22,6 +22,7 @@ export const register = createAsyncThunk(              // call API asynchronousl
           try {
                const data = await authApi.register(formData); // Call API
                return data;                                  // Returns --> action.payload
+               // return await authApi.register(formData);
           } catch (error) {
                return rejectWithValue(error.response?.data || error.message); // Returns custom error
           }
@@ -119,17 +120,17 @@ const authSlice = createSlice({
           
           setCredentials: (state, action) =>{
                state.user = action.payload.user;       // Storing returned user
-               state.token = action.payload.token;     // Store token
+          //      state.token = action.payload.token;     // Store token
                state.isAuthenticated = true;           // Set login status
-               localStorage.setItem('token', action.payload.token);
+          //      localStorage.setItem('token', action.payload.token);
           },
 
 
           clearCredentials: (state) =>{
                state.user = null;
-               state.token = null;
+          //      state.token = null;
                state.isAuthenticated = false;
-               localStorage.removeItem('token');            // Clear token
+          //      localStorage.removeItem('token');            // Clear token
           },
      },
 
@@ -146,9 +147,9 @@ const authSlice = createSlice({
                .addCase(register.fulfilled, (state, action) =>{
                     state.loading = false;
                     state.user = action.payload.user;
-                    state.token = action.payload.token;
+                    // state.token = action.payload.token;
                     state.isAuthenticated = true;
-                    localStorage.setItem('token', action.payload.token);
+                    // localStorage.setItem('token', action.payload.token);
                     toast.success('Registration successful! Please verify your email.')
                })
                .addCase(register.rejected, (state, action) =>{
@@ -183,9 +184,9 @@ const authSlice = createSlice({
                .addCase(login.fulfilled, (state, action) =>{
                     state.loading = false;
                     state.user = action.payload.user;
-                    state.token = action.payload.token;
+                    // state.token = action.payload.token;
                     state.isAuthenticated = true;
-                    localStorage.setItem('token', action.payload.token);
+                    // localStorage.setItem('token', action.payload.token);
                     toast.success('Login Secessfull!')
                })
                .addCase(login.rejected, (state, action) =>{
@@ -198,9 +199,9 @@ const authSlice = createSlice({
                // LOGOUT
                .addCase(logout.fulfilled, (state) =>{
                     state.user = null;
-                    state.token = null;
+                    // state.token = null;
                     state.isAuthenticated = false;
-                    localStorage.removeItem('token');
+                    // localStorage.removeItem('token');
                     toast.success('Logged-Out Successfully')
                })
                
@@ -217,8 +218,8 @@ const authSlice = createSlice({
                     state.loading = false;
                     state.isAuthenticated = false;
                     state.user = null;
-                    state.token = null;
-                    localStorage.removeItem('token');
+                    // state.token = null;
+                    // localStorage.removeItem('token');
                })
 
 
