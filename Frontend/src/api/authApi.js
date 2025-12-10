@@ -39,7 +39,7 @@ export const authApi ={
      },
      uploadCover: async (file) =>{
           const formData = new FormData();
-          formData.append('avatar', file);
+          formData.append('coverImage', file);
           const response = await axiosInstance.post('/auth/upload/cover', formData,{
                headers: { 'Content-Type': 'multipart/form-data' },
           });
