@@ -60,7 +60,7 @@ export const blogApi = {
     return response.data;
   },
 
-  uploadContentImages: async (id, files) => {
+  uploadContentImages: async (id, files) => { // FIX -ERROR
     const formData = new FormData();
     files.forEach((file) => formData.append('contentImages', file));
     const response = await axiosInstance.post(`/blogs/${id}/content-images`, formData, {
