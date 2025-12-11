@@ -41,18 +41,33 @@ const axiosInstance = axios.create({
 // );
 
 
+// axiosInstance.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     if (error.response?.status === 401) {
+//       window.location.href = '/login';
+//     }
+//     if (error.response?.status === 429) {
+//       console.warn("Rate limited:", error.response.data);
+//     }
+//     return Promise.reject(error);
+//   }
+// )
+
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      window.location.href = '/login';
-    }
     if (error.response?.status === 429) {
-      console.warn("Rate limited:", error.response.data);
+      console.warn('Rate limited - Too many requests');
+    }
+    if (error.response?.status === 401) {
+      console.info('Unauthorized request - normal for guests'); // Not an error!
     }
     return Promise.reject(error);
   }
-)
+);
+
 
 
 export default axiosInstance;

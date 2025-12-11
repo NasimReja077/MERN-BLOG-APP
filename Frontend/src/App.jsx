@@ -29,12 +29,17 @@ const App =()=> {
   const { loading: authLoading } = useSelector((state) => state.auth);
   // const { blogs } = useSelector((state) => state.blog);
 
-  useEffect(() =>{
+  useEffect(() => {
+    // Always load public blogs for home page
     dispatch(fetchBlogs({ page: 1, limit: 6 }));
-    dispatch(getProfile()).unwrap().catch(() =>{
 
+    // Try to restore session silently — 401 is OK and expected for guests
+    dispatch(getProfile()).unwrap().catch((err) => {
+      if (err?.status !== 401) {
+        console.error("Unexpected profile error:", err);
+      }
     });
-  },[dispatch]);
+  }, [dispatch]);
 
   if (authLoading) return <Loading fullScreen />;
 
