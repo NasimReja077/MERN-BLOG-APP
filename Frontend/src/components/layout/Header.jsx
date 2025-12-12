@@ -16,7 +16,7 @@ export const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-md sticky top-0 z-40">
+    <header className="bg-amber-200 shadow-md sticky top-0 z-40">
       <nav className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
@@ -51,7 +51,7 @@ export const Header = () => {
             ) : (
               <>
                 <Link to="/login" className="text-gray-700 hover:text-primary transition">Login</Link>
-                <Link to="/register" className="btn-primary">Sign Up</Link>
+                <Link to="/signup" className="btn-primary">Sign Up</Link>
               </>
             )}
           </div>
@@ -76,7 +76,7 @@ export const Header = () => {
             ) : (
               <>
                 <Link to="/login" className="block py-2 px-4 hover:bg-gray-100 rounded" onClick={() => setIsMenuOpen(false)}>Login</Link>
-                <Link to="/register" className="block py-2 px-4 hover:bg-gray-100 rounded" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
+                <Link to="/signup" className="block py-2 px-4 hover:bg-gray-100 rounded" onClick={() => setIsMenuOpen(false)}>Sign Up</Link>
               </>
             )}
           </div>

@@ -43,7 +43,7 @@ export const Home = () => {
   const { isAuthenticated, user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-amber-50">
+    <div className="min-h-screen bg-blue-200">
       {/* Hero */}
       <section className="container mx-auto px-6 py-20 text-center">
         <h1 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
@@ -68,7 +68,7 @@ export const Home = () => {
               <Link to="/signup" className="btn btn-lg btn-primary">
                 Start Writing Free
               </Link>
-              <Link to="/login" className="btn btn-lg btn-outline">
+              <Link to="/login" className="btn btn-lg btn-outline border-4 border-amber-500  text-amber-500">
                 Login
               </Link>
             </>
