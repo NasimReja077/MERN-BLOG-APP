@@ -5,11 +5,13 @@ import { useAuth } from '../../hooks/useAuth';
 export const RedirectAuthUser =({ children })=> {
      const { isAuthenticated, user, loading } = useAuth();
 
-     if (loading) return null;
+     if (loading){
+          return <>{children}</>;
+     }
 
-     if ( isAuthenticated && user?.isVerified) {
+     if ( isAuthenticated && user && user.isVerified) {
           return <Navigate to='/' replace />
      }
      
-     return children;
+     return <>{children}</>;
 };

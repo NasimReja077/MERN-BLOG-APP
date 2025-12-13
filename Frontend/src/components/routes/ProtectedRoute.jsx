@@ -13,7 +13,11 @@ export const ProtectedRoute = ({ children }) =>{
     return <Navigate to="/login" replace />;
   }
   
-  if(user && !user.isVerified){
+  if(!user){
+    return<Loading fullScreen/>;
+  }
+
+  if(!user.isVerified){
     return<Navigate to='/verify-otp' replace/>
   }
   
