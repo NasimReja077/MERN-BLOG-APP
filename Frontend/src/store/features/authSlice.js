@@ -100,6 +100,35 @@ export const updateProfile = createAsyncThunk(
      }
 );
 
+export const forgotPassword = createAsyncThunk(
+  "auth/forgotPassword",
+  async ( emailInput, { rejectWithValue }) => {
+    try {
+     const email = typeof emailInput == "string" ? emailInput: emailInput?.email;
+     if (!email) throw new Error("Email is requrd");
+
+      const response = await authApi.forgotPassword(email);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: "Failed to send reset link" });
+    }
+  }
+);
+
+
+
+export const resetPassword = createAsyncThunk(
+ 'auth/resetPassword',
+  async ({ token, newPassword }, { rejectWithValue }) => {
+    try {
+      const data = await authApi.resetPassword(token, newPassword);
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || { message: 'Password reset failed' });
+    }
+  }
+);
+
 
 // ================
 // AUTH SLICE
@@ -237,6 +266,39 @@ const authSlice = createSlice({
                     state.error = action.payload;
                     toast.error(action.payload?.message || 'Update failed');
                })
+
+               // Forgot Password
+               .addCase(forgotPassword.pending, (state) => {
+                    state.loading = true;
+                    state.error = null;
+               })
+
+               .addCase(forgotPassword.fulfilled, (state) => {
+                    state.loading = false;
+                    // state.error = null;
+               })
+
+               .addCase(forgotPassword.rejected, (state, action) => {
+                    state.loading = false;
+                    state.error = action.payload;
+               })
+
+               // Reset Password
+      .addCase(resetPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetPassword.fulfilled, (state) => {
+          state.loading = false;
+          toast.success('Password reset successfully! You can now log in.');
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
+          state.loading = false;
+          state.error = action.payload;
+          toast.error(action.payload?.message || 'Password reset failed');
+      })
+
+               
      },
 });
 
