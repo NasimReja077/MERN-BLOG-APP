@@ -10,7 +10,7 @@ export const BlogCard = ({ blog }) => {
   return (
     <div className="card hover:shadow-lg transition-shadow duration-300 bg-amber-200">
       {blog.thumbnail && (
-        <Link to={`/blog/${blog._id}`}>
+        <Link to={`/blogs/${blog._id}`}>
           <img
             src={blog.thumbnail}
             alt={blog.title}
@@ -30,7 +30,7 @@ export const BlogCard = ({ blog }) => {
           )}
         </div>
 
-        <Link to={`/blog/${blog._id}`}>
+        <Link to={`/blogs/${blog._id}`}>
           <h2 className="text-2xl font-bold hover:text-primary transition line-clamp-2">
             {blog.title}
           </h2>
