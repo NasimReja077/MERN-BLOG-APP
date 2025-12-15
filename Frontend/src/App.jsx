@@ -26,7 +26,7 @@ import { fetchBlogs } from "./store/features/blogSlice";
 const App =()=> {
 
   const dispatch = useDispatch();
-  const { loading: authLoading } = useSelector((state) => state.auth);
+  const { loading: authLoading, user } = useSelector((state) => state.auth);
   // const { blogs } = useSelector((state) => state.blog);
 
   useEffect(() => {
@@ -36,12 +36,14 @@ const App =()=> {
     // Try to restore session silently — 401 is OK and expected for guests
     dispatch(getProfile()).unwrap().catch((err) => {
       if (err?.status !== 401) {
-        console.error("Unexpected profile error:", err);
+        console.error("Session restore error:", err);
       }
     });
   }, [dispatch]);
 
-  if (authLoading) return <Loading fullScreen />;
+  if (authLoading && !user){
+    return <Loading fullScreen />
+  }
 
   const router = createBrowserRouter([
     {
@@ -73,19 +75,11 @@ const App =()=> {
         },
         {
           path: "/verify-otp",
-          element: (
-            <RedirectAuthUser>
-              <VerifyOTP/>
-            </RedirectAuthUser>
-          ),
+          element:<VerifyOTP/>,
         },
         {
           path: "/forgot-password",
-          element: (
-            <RedirectAuthUser>
-              <ForgotPassword/>
-            </RedirectAuthUser>
-          ),
+          element: <ForgotPassword/>
         },
         {
           path: "/reset-password/:token",
