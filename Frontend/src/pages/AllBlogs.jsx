@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { HorizontalBlogList } from "../components/UI/blog/HorizontalBlogList";
 import { fetchBlogs } from "../store/features/blogSlice";
+import { HorizontalBlogList } from "../components/UI/blog/HorizontalBlogList";
 
 export const AllBlogs = () => {
   const dispatch = useDispatch();
@@ -12,18 +12,17 @@ export const AllBlogs = () => {
   }, [dispatch]);
 
   return (
-    <div className="min-h-screen bg-base-200 py-16">
+    <div className="min-h-screen bg-base-200 py-20">
       <div className="container mx-auto px-4 max-w-7xl">
-
-        {/* HEADER */}
-        <div className="text-center mb-20">
-          <h1 className="text-6xl font-extrabold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Latest Stories
+        {/* Premium Header */}
+        <header className="text-center mb-24">
+          <h1 className="text-6xl lg:text-7xl font-extrabold bg-linear-to-r from-teal-500 to-blue-600 bg-clip-text text-transparent mb-8">
+            Discover Stories
           </h1>
-          <p className="mt-6 max-w-2xl mx-auto text-xl text-base-content/70">
-            Discover meaningful stories and ideas shared by creators.
+          <p className="text-2xl text-base-content/70 max-w-4xl mx-auto leading-relaxed">
+            Immerse yourself in thoughtful writing, personal journeys, and creative ideas from our passionate community of writers.
           </p>
-        </div>
+        </header>
 
         <HorizontalBlogList blogs={blogs} loading={loading} />
       </div>
