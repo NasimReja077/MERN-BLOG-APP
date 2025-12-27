@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Loading } from "../feedback/Loading";
+import PropTypes from 'prop-types';
 
 export const ProtectedRoute = ({ children }) =>{
   const { isAuthenticated, user, loading } = useAuth();
@@ -14,12 +15,17 @@ export const ProtectedRoute = ({ children }) =>{
   }
   
   if(!user){
-    return<Loading fullScreen/>;
+    return <Loading fullScreen />;
   }
 
   if(!user.isVerified){
-    return<Navigate to='/verify-otp' replace/>
+    return <Navigate to='/verify-otp' replace />;
   }
   
   return children;
+};
+
+
+ProtectedRoute.PropTypes = {
+  children: PropTypes.node.isRequired,
 };
