@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { blogApi } from '../../api/blogApi';
 import toast from 'react-hot-toast';
+import { TOAST_MESSAGES } from '../../components/constants/index';
 
-
+// INITIAL STATE
 const initialState = {
      blogs: [],
      currentBlog: null,
@@ -147,7 +148,7 @@ const blogSlice = createSlice({
                     // state.error = action.payload;
                      // Only show error if it's not 401 (unauthorized = guest = normal)
                     if (action.payload?.status !== 401) {
-                         state.error = action.payload?.message || "Failed to load blogs";
+                         state.error = action.payload?.message || TOAST_MESSAGES.BLOG_LOAD_FAILED;
                     }
                })
 
@@ -187,12 +188,12 @@ const blogSlice = createSlice({
                .addCase(createBlog.fulfilled, (state, action) =>{
                     state.loading = false;
                     state.blogs.unshift(action.payload.blog);
-                    toast.success = ('Blog Created Successfully!');
+                    toast.success = (TOAST_MESSAGES.BLOG_CREATED);
                })
                .addCase(createBlog.rejected, (state, action) =>{
                     state.loading = false;
                     state.error = action.payload;
-                    toast.error(action.payload?.message || 'Faild to Create Blog');
+                    toast.error(action.payload?.message || TOAST_MESSAGES.BLOG_CREATE_FAILED);
                })
 
 
@@ -208,22 +209,22 @@ const blogSlice = createSlice({
                          state.blogs[index] = updated;
                     }
                     state.currentBlog = updated;
-                    toast.success('Blog Updated Successfully!');
+                    toast.success(TOAST_MESSAGES.BLOG_UPDATED);
                })
                
                .addCase(updateBlog.rejected, (state, action) => {
                     state.loading = false;
                     state.error = action.payload;
-                    toast.error(action.payload?.message || 'Failed to update blog');
+                    toast.error(action.payload?.message || TOAST_MESSAGES.BLOG_UPDATE_FAILED);
                })
 
                // Delete Blog
                .addCase(deleteBlog.fulfilled, (state, action) => {
                     state.blogs = state.blogs.filter((b) => b._id !== action.payload);
-                    toast.success('Blog Deleted Successfully!');
+                    toast.success(TOAST_MESSAGES.BLOG_DELETED);
                })
                .addCase(deleteBlog.rejected, (state, action) => {
-                    toast.error(action.payload?.message || 'Failed to delete blog');
+                    toast.error(action.payload?.message || TOAST_MESSAGES.BLOG_DELETE_FAILED);
                })
 
                // Like Blog

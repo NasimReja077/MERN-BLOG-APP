@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { commentApi } from '../../api/commentApi';
 import toast from 'react-hot-toast';
+import { TOAST_MESSAGES } from '../../components/constants/index';
 
 
 const initialState = {
@@ -129,10 +130,10 @@ const commentSlice = createSlice({
       // ADD COMMENT
       .addCase(addComment.fulfilled, (state, action) => {
         state.comments.unshift(action.payload.comment);
-        toast.success('Comment added Successfully!');
+        toast.success(TOAST_MESSAGES.COMMENT_ADDED);
       })
       .addCase(addComment.rejected, (state, action) =>{
-        toast.error(action.payload?.message || 'Failed to Add comment');
+        toast.error(action.payload?.message || TOAST_MESSAGES.COMMENT_ADD_FAILED);
       })
 
       // ADD REPLY
@@ -142,7 +143,7 @@ const commentSlice = createSlice({
           if (!comment.replies) comment.replies = [];
           comment.replies.push(action.payload.reply);
         }
-        toast.success('Reply add Successfully!');
+        toast.success(TOAST_MESSAGES.REPLY_ADDED);
       })
 
       // UPDATE COMMENT
@@ -153,7 +154,7 @@ const commentSlice = createSlice({
         if (index !== -1){
           state.comments[index] = updated;
         }
-        toast.success('Comment updated successfully!');
+        toast.success(TOAST_MESSAGES.COMMENT_UPDATED);
       })
 
       //  DELETE COMMENT
@@ -163,7 +164,7 @@ const commentSlice = createSlice({
           state.comments[index].comment = '[Comment deleted]';
           state.comments[index].isDeleted = true;
         }
-        toast.success('comment deleted Successfully!');
+        toast.success(TOAST_MESSAGES.COMMENT_DELETED);
       })
 
       // LIKE COMMENT
