@@ -1,14 +1,15 @@
 import axios from 'axios';
+import { API_TIMEOUT, HTTP_STATUS } from '../components/constants/index';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 const axiosInstance = axios.create({
      baseURL: API_BASE_URL,
      withCredentials: true, // Sends HTTP-only cookies automatically
-     timeout: 10000, // 10 seconds
-     // headers: {
-     //      'Content-Type' : 'application/json',
-     // },
+     timeout: API_TIMEOUT,
+     headers: {
+      'Content-Type': 'application/json',
+    },
 });
 
 // Request interceptor
@@ -54,20 +55,26 @@ const axiosInstance = axios.create({
 //   }
 // )
 
-
+// Response interceptor for global error handling
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 429) {
+    // Handle rate limiting
+    if(error.response?.status === HTTP_STATUS.TOO_MANY_REQUESTS){
       console.warn('Rate limited - Too many requests');
     }
-    if (error.response?.status === 401) {
+    // 401 is normal for guests accessing public resources
+    if (error.response?.status === HTTP_STATUS.UNAUTHORIZED){
       console.info('Unauthorized request - normal for guests'); // Not an error!
     }
+
+    // Log server errors for debugging
+    if (error.response?.status >= HTTP_STATUS.INTERNAL_SERVER_ERROR){
+      console.error('Server error:', error.response?.data?.message || error.message);
+    }
+
     return Promise.reject(error);
   }
 );
-
-
 
 export default axiosInstance;
