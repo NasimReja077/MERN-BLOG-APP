@@ -23,7 +23,7 @@ export const Loading = ({ size = 'md', fullScreen = false }) => {
   );
 };
 
-Loading.PropTypes = {
+Loading.propTypes = {
      size: PropTypes.oneOf(['sm', 'md', 'lg']),
      fullScreen: PropTypes.bool,
 };
