@@ -1,3 +1,4 @@
+// Frontend/src/components/routes/ProtectedRoute.jsx
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Loading } from "../feedback/Loading";
@@ -26,6 +27,6 @@ export const ProtectedRoute = ({ children }) =>{
 };
 
 
-ProtectedRoute.PropTypes = {
+ProtectedRoute.propTypes = {
   children: PropTypes.node.isRequired,
 };
