@@ -15,7 +15,7 @@ const initialState = {
           limit: 10,
           category: '',
           tag: '',
-          sortBy: 'data',
+          sortBy: 'date',
           sortOrder: 'desc',
      },
 };
@@ -188,7 +188,7 @@ const blogSlice = createSlice({
                .addCase(createBlog.fulfilled, (state, action) =>{
                     state.loading = false;
                     state.blogs.unshift(action.payload.blog);
-                    toast.success = (TOAST_MESSAGES.BLOG_CREATED);
+                    toast.success(TOAST_MESSAGES.BLOG_CREATED);
                })
                .addCase(createBlog.rejected, (state, action) =>{
                     state.loading = false;
@@ -231,9 +231,9 @@ const blogSlice = createSlice({
                .addCase(likeBlog.fulfilled, (state, action) =>{
                     const { id, likeCount } = action.payload;
                     const blog = state.blogs.find((b) => b._id === id);
-                    if (blog) blog.like.count = likeCount;
-                    if(state.currentBlog?._id === id){
-                         state.currentBlog.like.count = likeCount;
+                    if (blog) blog.likes.count = likeCount;
+                    if (state.currentBlog?._id === id) {
+                         state.currentBlog.likes.count = likeCount;
                     }
                });
      },
