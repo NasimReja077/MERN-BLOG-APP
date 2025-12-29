@@ -1,16 +1,17 @@
+// Frontend/src/hooks/useDebounce.js
 import { useState, useEffect } from "react";
 
 export const useDebounce = (value, delay = 500) => {
-     const [ debounceValue, setDebouncedValu] = useState(value);
+     const [ debouncedValue, setDebouncedValue] = useState(value);
 
      useEffect(() =>{
           const handler = setTimeout(() =>{
-               setDebouncedValu(value);
+               setDebouncedValue(value);
           }, delay);
 
      return () =>{
           clearTimeout(handler);
      };
      },[value, delay]);
-     return debounceValue;
+     return debouncedValue;
 }
