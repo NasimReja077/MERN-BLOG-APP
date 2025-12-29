@@ -230,7 +230,7 @@ const authSlice = createSlice({
         // state.token = null;
         state.isAuthenticated = false;
         // localStorage.removeItem('token');
-        toast.success(TOAST_MESSAGES.LOGIN_SUCCESS);
+        toast.success(TOAST_MESSAGES.LOGOUT_SUCCESS);
       })
 
       // GET PROFILE
