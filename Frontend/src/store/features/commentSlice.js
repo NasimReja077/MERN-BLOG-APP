@@ -87,7 +87,7 @@ export const likeComment = createAsyncThunk(
   async (id, { rejectWithValue }) =>{
     try {
       const data = await commentApi.likeComment(id);
-      return  { id, likeComment: data.likeComment };
+      return { id, likeCount: data.likeCount };
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
