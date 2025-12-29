@@ -1,12 +1,15 @@
+// Frontend/src/components/UI/blog/HorizontalBlogCard.jsx
 import React from "react";
 import { Link } from "react-router-dom";
+import PropTypes from "prop-types";
 import { FiHeart, FiEye, FiClock, FiStar } from "react-icons/fi";
-import { formatDistanceToNow } from "date-fns";
+import { formatRelativeTime, estimateReadTime, formatCompactNumber, getInitials } from '../../../utils/formatters';
 
 const HorizontalBlogCard = ({ blog }) => {
-  const likeCount = blog.likeCount || blog.likes?.count || 0;
-  const viewCount = blog.viewCount || blog.views?.count || 0;
-  const readTime = Math.ceil((blog.content?.length || 1500) / 300);
+  const likeCount = blog.likeCount ?? blog.likes?.count ?? 0;
+  const viewCount = blog.viewCount ?? blog.views?.count ?? 0;
+  const readTime = estimateReadTime(blog.content || "");
+  // const author = blog.author || {};
   const tags = blog.tags || [];
 
   return (
@@ -91,19 +94,23 @@ const HorizontalBlogCard = ({ blog }) => {
               onClick={(e) => e.stopPropagation()}
               className="flex items-center gap-4 hover:opacity-80 transition"
             >
-              <img
-                src={blog.author?.avatar || "/default-avatar.png"}
-                alt={blog.author?.username}
-                className="w-12 h-12 rounded-full object-cover ring-4 ring-teal-500/20"
-              />
+              {blog.author?.avatar ? (
+                <img
+                  src={blog.author.avatar}
+                  alt={blog.author?.username}
+                  className="w-12 h-12 rounded-full object-cover ring-4 ring-teal-500/20"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-teal-500 text-white flex items-center justify-center font-bold ring-4 ring-teal-500/20">
+                  {getInitials(blog.author?.username)}
+                </div>
+              )}
               <div>
                 <p className="font-bold text-base-content">
                   {blog.author?.username}
                 </p>
                 <p className="text-sm text-base-content/60">
-                  {formatDistanceToNow(new Date(blog.createdAt), {
-                    addSuffix: true,
-                  })}
+                  {formatRelativeTime(blog.createdAt)}
                 </p>
               </div>
             </Link>
@@ -112,11 +119,11 @@ const HorizontalBlogCard = ({ blog }) => {
             <div className="flex items-center gap-6 text-base-content/70">
               <span className="flex items-center gap-2">
                 <FiEye className="w-5 h-5" />
-                {viewCount.toLocaleString()}
+                {formatCompactNumber(viewCount)}
               </span>
               <span className="flex items-center gap-2 text-red-500">
                 <FiHeart className="w-5 h-5 fill-red-500" />
-                {likeCount.toLocaleString()}
+                {formatCompactNumber(likeCount)}
               </span>
               <span className="flex items-center gap-2">
                 <FiClock className="w-5 h-5" />
@@ -129,6 +136,32 @@ const HorizontalBlogCard = ({ blog }) => {
       </div>
     </article>
   );
+};
+
+HorizontalBlogCard.propTypes = {
+  blog: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    summary: PropTypes.string,
+    thumbnail: PropTypes.string,
+    tags: PropTypes.arrayOf(PropTypes.string),
+    category: PropTypes.string,
+    createdAt: PropTypes.string.isRequired,
+    author: PropTypes.shape({
+      _id: PropTypes.string,
+      username: PropTypes.string,
+      avatar: PropTypes.string,
+    }),
+    likes: PropTypes.shape({
+      count: PropTypes.number,
+    }),
+    views: PropTypes.shape({
+      count: PropTypes.number,
+    }),
+    commentsCount: PropTypes.number,
+    featured: PropTypes.bool,
+    content: PropTypes.string,
+  }).isRequired,
 };
 
 export default HorizontalBlogCard;
