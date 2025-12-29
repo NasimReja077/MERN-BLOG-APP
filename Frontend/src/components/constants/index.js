@@ -1,9 +1,14 @@
+// Frontend/src/components/constants/index.js
+
 // API Configuration
 export const API_TIMEOUT = 10000; // 10 seconds
 
 // Pagination
 export const DEFAULT_PAGE_SIZE = 10;
 export const DEFAULT_PAGE = 1;
+
+// OTP / Verification
+export const OTP_TIMEOUT = 180; // seconds (3 minutes)
 
 // Blog Status
 export const BLOG_STATUS = {
@@ -88,6 +93,8 @@ export const TOAST_MESSAGES = {
   LOGIN_SUCCESS: 'Login successful!',
   LOGOUT_SUCCESS: 'Logged-Out Successfully',
   PROFILE_UPDATED: 'Profile updated successfully!',
+  PASSWORD_RESET_LINK_SENT: 'Password reset link sent to your email',
+  PASSWORD_RESET_LINK_SENT_FAILED: 'Failed to send reset email',
   PASSWORD_RESET_SUCCESS: 'Password reset successfully! You can now log in.',
   
   // Blog
@@ -101,6 +108,10 @@ export const TOAST_MESSAGES = {
   COMMENT_DELETED: 'comment deleted Successfully!',
   REPLY_ADDED: 'Reply add Successfully!',
   
+  // OTP / Verification
+  OTP_RESEND_SUCCESS: 'New OTP sent to your email!',
+  OTP_RESEND_FAILED: 'Failed to resend OTP',
+
   // Errors
   REGISTRATION_FAILED: 'Registration failed',
   VERIFICATION_FAILED: 'Verification failed',
@@ -112,6 +123,11 @@ export const TOAST_MESSAGES = {
   BLOG_DELETE_FAILED: 'Failed to delete blog',
   COMMENT_ADD_FAILED: 'Failed to Add comment',
   BLOG_LOAD_FAILED: 'Failed to load blogs',
+
+  // Likes 
+  // viewes
+  // shares
+  
 };
 
 // Local Storage Keys
@@ -119,3 +135,4 @@ export const STORAGE_KEYS = {
   THEME: 'theme',
   LANGUAGE: 'language',
 };
+
