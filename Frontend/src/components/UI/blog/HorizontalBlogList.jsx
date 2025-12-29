@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from 'prop-types';
 import HorizontalBlogCard from "./HorizontalBlogCard";
 import { Link } from "react-router-dom";
 
@@ -42,4 +43,16 @@ export const HorizontalBlogList = ({ blogs = [], loading = false }) => {
       ))}
     </div>
   );
+};
+
+HorizontalBlogList.propTypes = {
+  blogs: PropTypes.arrayOf(
+    PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      title: PropTypes.string,
+      summary: PropTypes.string,
+      thumbnail: PropTypes.string,
+    })
+  ),
+  loading: PropTypes.bool,
 };
