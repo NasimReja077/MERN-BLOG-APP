@@ -1,14 +1,16 @@
+// Frontend/src/components/UI/blog/BlogCard.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FiHeart } from "react-icons/fi";
 import { HiOutlineEye } from "react-icons/hi";
 import { LuMessageCircleMore } from "react-icons/lu";
 import { LuCalendarDays } from "react-icons/lu";
-import { formatDistance } from 'date-fns';
+import { formatRelativeTime, getInitials } from '../../../utils/formatters';
+import PropTypes from 'prop-types';
 
 export const BlogCard = ({ blog }) => {
   return (
-    <div className="card hover:shadow-lg transition-shadow duration-300 bg-amber-200">
+    <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300">
       {blog.thumbnail && (
         <Link to={`/blogs/${blog._id}`}>
           <img
@@ -23,7 +25,7 @@ export const BlogCard = ({ blog }) => {
         <div className="flex items-center space-x-4 text-sm text-gray-500">
           <div className="flex items-center space-x-1">
             <LuCalendarDays size={16} />
-            <span>{formatDistance(new Date(blog.createdAt), new Date(), { addSuffix: true })}</span>
+            <span>{formatRelativeTime(blog.createdAt)}</span>
           </div>
           {blog.category && (
             <span className="px-2 py-1 bg-primary/10 text-primary rounded text-xs">{blog.category}</span>
@@ -46,7 +48,7 @@ export const BlogCard = ({ blog }) => {
               <img src={blog.author.avatar} alt={blog.author.username} className="w-8 h-8 rounded-full object-cover" />
             ) : (
               <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center">
-                {blog.author.username[0].toUpperCase()}
+                {getInitials(blog.author.username)}
               </div>
             )}
             <span className="text-sm font-medium">{blog.author.username}</span>
@@ -80,4 +82,28 @@ export const BlogCard = ({ blog }) => {
       </div>
     </div>
   );
+};
+
+BlogCard.propTypes = {
+  blog: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    summary: PropTypes.string,
+    thumbnail: PropTypes.string,
+    tags: PropTypes.arrayOf(PropTypes.string),
+    category: PropTypes.string,
+    createdAt: PropTypes.string.isRequired,
+    author: PropTypes.shape({
+      _id: PropTypes.string.isRequired,
+      username: PropTypes.string.isRequired,
+      avatar: PropTypes.string,
+    }).isRequired,
+    likes: PropTypes.shape({
+      count: PropTypes.number,
+    }),
+    views: PropTypes.shape({
+      count: PropTypes.number,
+    }),
+    commentsCount: PropTypes.number,
+  }).isRequired,
 };
