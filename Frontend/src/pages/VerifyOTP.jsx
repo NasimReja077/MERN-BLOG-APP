@@ -1,19 +1,23 @@
+// Frontend/src/pages/VerifyOTP.jsx
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import PropTypes from 'prop-types';
 import { otpSchema } from "../utils/validation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { verifyOTP } from "../store/features/authSlice";
 import { FiLoader } from "react-icons/fi";
 import { SiAuthelia } from "react-icons/si";
+import { ROUTES, TOAST_MESSAGES, OTP_TIMEOUT } from '../components/constants';
+import { formatTimeMMSS } from '../utils/formatters';
 
 export const VerifyOTP = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, user, isAuthenticated } = useSelector((state) => state.auth);
-  const [timeLeft, setTimeLeft] = useState(180); // 3 min
+  const [timeLeft, setTimeLeft] = useState(OTP_TIMEOUT); // seconds (default from constants)
 
   const {
     register,
@@ -49,34 +53,33 @@ export const VerifyOTP = () => {
     }
   }, [isAuthenticated, user, navigate]);
 
-  // Format time as MM:SS
-  const minutes = Math.floor(timeLeft / 60);
-  const seconds = timeLeft % 60;
+  // Format time and expiry status
+  const formattedTime = formatTimeMMSS(timeLeft);
   const isTimerExpired = timeLeft === 0;
 
   const onSubmit = async (data) => {
     try {
       await dispatch(verifyOTP(data.code)).unwrap();
-      toast.success("Email verified successfully!");
-      navigate("/");
+      toast.success(TOAST_MESSAGES.EMAIL_VERIFIED);
+      navigate(ROUTES.HOME);
     } catch (err) {
-      toast.error(err?.message || "Invalid or expired OTP");
+      toast.error(err?.message || TOAST_MESSAGES.VERIFICATION_FAILED);
       reset();
       setFocus("code");
     }
   };
 
   const handleResend = () => {
-    // TODO: Implement resend OTP API call here
+    // TODO: Replace with actual resend API call and handle errors properly
     toast.promise(
       new Promise((resolve) => setTimeout(resolve, 1500)),
       {
         loading: "Sending new OTP...",
-        success: "New OTP sent to your email!",
-        error: "Failed to resend OTP",
+        success: TOAST_MESSAGES.OTP_RESEND_SUCCESS,
+        error: TOAST_MESSAGES.OTP_RESEND_FAILED,
       }
     );
-    setTimeLeft(180);
+    setTimeLeft(OTP_TIMEOUT);
     reset();
     setFocus("code");
   };
@@ -124,16 +127,14 @@ export const VerifyOTP = () => {
           {/* Countdown Timer */}
           <div className="text-center">
             <div className="font-mono text-2xl text-primary">
-              <span style={{ "--value": minutes }}></span>:
-              <span style={{ "--value": seconds < 10 ? `0${seconds}` : seconds }}></span>
-            </div>
-
+                {formattedTime}
+              </div>
 
             {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting || loading || isTimerExpired}
-            className="btn btn-primary btn-lg w-full"
+            className="btn btn-primary btn-lg w-full mt-6"
           >
             {(isSubmitting || loading) ? (
               <>
@@ -166,4 +167,8 @@ export const VerifyOTP = () => {
       </div>
     </div>
   );
+};
+
+VerifyOTP.propTypes = {
+  redirectTo: PropTypes.string,
 };
