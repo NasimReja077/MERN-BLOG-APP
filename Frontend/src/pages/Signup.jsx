@@ -1,5 +1,8 @@
+// Frontend/src/pages/Login.jsx
 import React, { useState } from "react";
+import PropTypes from 'prop-types';
 import { Link, useNavigate } from "react-router-dom";
+import { ROUTES, TOAST_MESSAGES } from '../components/constants';
 import { ImBlog } from "react-icons/im";
 import { FaUser, FaUsers } from "react-icons/fa6";
 import { MdOutlineAlternateEmail } from "react-icons/md";
@@ -14,7 +17,7 @@ import { register } from "../store/features/authSlice";
 import toast from "react-hot-toast";
 import { FiLoader } from "react-icons/fi";
 
-export const Signup = () => {
+export const Signup = ({ redirectTo = ROUTES.VERIFY_OTP }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading } = useSelector((state) => state.auth);
@@ -37,10 +40,10 @@ export const Signup = () => {
   const onSubmit = async(data) =>{
       try {
         await dispatch(register(data)).unwrap();
-        toast.success("Registration successful! Please verify your email.")
-        navigate("/verify-otp");
+        toast.success(TOAST_MESSAGES.REGISTRATION_SUCCESS);
+        navigate(redirectTo);
       } catch (err) {
-        toast.error(err?.message || "Registration failed" );
+        toast.error(err?.message || TOAST_MESSAGES.REGISTRATION_FAILED );
         // console.log("error log:", err);
       }
     };
@@ -217,10 +220,10 @@ export const Signup = () => {
           <div className="text-center">
             <p className="text-base-content/60">
               Already have an account?{" "}
-              <Link to="/login" className="link link-primary">
+              <Link to={ROUTES.LOGIN} className="link link-primary">
                 Sign in
               </Link>
-            </p>
+            </p> 
           </div>
         </div>
       </div>
@@ -236,4 +239,8 @@ export const Signup = () => {
       </div>
     </div>
   );
+};
+
+Signup.propTypes = {
+  redirectTo: PropTypes.string,
 };
