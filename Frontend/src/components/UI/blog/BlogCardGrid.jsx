@@ -1,7 +1,8 @@
 import React from "react";
+import PropTypes from 'prop-types';
 import { Link } from "react-router-dom";
 import { FiHeart, FiEye, FiMessageCircle, FiClock } from "react-icons/fi";
-import { formatDistanceToNow } from "date-fns";
+import { formatRelativeTime, estimateReadTime, formatCompactNumber, getInitials } from '../../../utils/formatters';
 
 const BlogCard = ({ blog }) => {
   const likeCount = blog.likeCount || blog.likes?.count || 0;
@@ -33,10 +34,10 @@ const BlogCard = ({ blog }) => {
           )}
           <div className="flex items-center gap-1.5 text-base-content/60">
             <FiClock className="size-4" />
-            <span>{Math.ceil(blog.content?.length / 300 || 5)} min read</span>
+            <span>{estimateReadTime(blog.content)} min read</span>
           </div>
           <span className="text-base-content/50">
-            {formatDistanceToNow(new Date(blog.createdAt), { addSuffix: true })}
+            {formatRelativeTime(blog.createdAt)}
           </span>
         </div>
 
@@ -61,12 +62,18 @@ const BlogCard = ({ blog }) => {
             className="flex items-center gap-3 hover:opacity-80 transition"
           >
             <div className="avatar">
-              <div className="w-12 rounded-full ring-4 ring-primary/20">
-                <img
-                  src={blog.author?.avatar || "/default-avatar.png"}
-                  alt={blog.author?.username}
-                  className="object-cover"
-                />
+              <div className="w-12 rounded-full ring-4 ring-primary/20 overflow-hidden flex items-center justify-center">
+                {blog.author?.avatar ? (
+                  <img
+                    src={blog.author.avatar}
+                    alt={blog.author?.username}
+                    className="object-cover w-full h-full"
+                  />
+                ) : (
+                  <div className="w-12 h-12 bg-primary text-white flex items-center justify-center font-bold">
+                    {getInitials(blog.author?.username)}
+                  </div>
+                )}
               </div>
             </div>
             <div>
@@ -81,15 +88,15 @@ const BlogCard = ({ blog }) => {
           <div className="flex items-center gap-6 text-base-content/70">
             <button className="flex items-center gap-2 hover:text-red-500 transition">
               <FiHeart className="size-5" />
-              <span className="font-medium">{likeCount}</span>
+              <span className="font-medium">{formatCompactNumber(likeCount)}</span>
             </button>
             <div className="flex items-center gap-2">
               <FiEye className="size-5" />
-              <span className="font-medium">{viewCount}</span>
+              <span className="font-medium">{formatCompactNumber(viewCount)}</span>
             </div>
             <div className="flex items-center gap-2">
               <FiMessageCircle className="size-5" />
-              <span className="font-medium">{commentsCount}</span>
+              <span className="font-medium">{formatCompactNumber(commentsCount)}</span>
             </div>
           </div>
 
@@ -146,4 +153,32 @@ export const BlogCardGrid = ({ blogs = [], loading = false }) => {
       ))}
     </div>
   );
+};
+
+BlogCard.propTypes = {
+  blog: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    title: PropTypes.string,
+    summary: PropTypes.string,
+    thumbnail: PropTypes.string,
+    tags: PropTypes.arrayOf(PropTypes.string),
+    category: PropTypes.string,
+    createdAt: PropTypes.string,
+    author: PropTypes.shape({
+      _id: PropTypes.string,
+      username: PropTypes.string,
+      avatar: PropTypes.string,
+      fullName: PropTypes.string,
+    }),
+    likes: PropTypes.shape({ count: PropTypes.number }),
+    views: PropTypes.shape({ count: PropTypes.number }),
+    commentsCount: PropTypes.number,
+    content: PropTypes.string,
+    featured: PropTypes.bool,
+  }).isRequired,
+};
+
+BlogCardGrid.propTypes = {
+  blogs: PropTypes.arrayOf(PropTypes.shape({ _id: PropTypes.string.isRequired })),
+  loading: PropTypes.bool,
 };
