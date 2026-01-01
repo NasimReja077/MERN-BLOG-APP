@@ -4,11 +4,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchBlogById, likeBlog } from "../store/features/blogSlice";
 import { Loading } from "../components/feedback/Loading";
 import toast from "react-hot-toast";
-import { format } from "date-fns";
-import { TiHeartOutline } from "react-icons/ti";
+Simport { TiHeartOutline } from "react-icons/ti";
 import { BsEye } from "react-icons/bs";
 import { MdOutlineCalendarMonth } from "react-icons/md";
 import { FaRegClock } from "react-icons/fa";
+import { blogApi } from "../api/blogApi";
+import { ROUTES } from "../components/constants";
+import { estimateReadTime, formatDate } from "../utils/formatters";
+import { IoMdTimer } from "react-icons/io";
 
 export const BlogDetails = () => {
   const { id } = useParams();
@@ -19,6 +22,7 @@ export const BlogDetails = () => {
   useEffect(() => {
     if (id) {
       dispatch(fetchBlogById(id));
+      blogApi.trackView(id).catch(() => {});
     }
   }, [id, dispatch]);
 
@@ -54,7 +58,7 @@ export const BlogDetails = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-3xl font-bold mb-4">Blog Not Found</h2>
-          <Link to="/blogs" className="btn btn-primary">
+          <Link to={ROUTES.BLOGS} className="btn btn-primary">
             Browse Blogs
           </Link>
         </div>
@@ -70,23 +74,20 @@ export const BlogDetails = () => {
     author,
     createdAt,
     updatedAt,
-    likeCount = 0,
-    viewCount = 0,
-    likes, // fallback if structure is { likes: { count, users } }
-    views, // fallback
     category,
     tags = [],
   } = currentBlog;
 
-  const isOwner = currentUser?._id === author?._id;
+  const safeAuthor = author || {};
+  const isOwner = currentUser?._id === safeAuthor._id;
 
   // Determine like count and liked status
-  const actualLikeCount = likeCount || likes?.count || 0;
-  const likedUsers = likes?.users || [];
-  const isLiked = likedUsers.includes(currentUser?._id);
+  const actualLikeCount = currentBlog.likeCount ?? currentBlog.likes?.count ?? 0;
+  const likedUsers = currentBlog.likes?.users ?? [];
+  const isLiked = currentUser ? likedUsers.includes(currentUser._id) : false;
 
   // Determine view count
-  const actualViewCount = viewCount || views?.count || 0;
+  const actualViewCount = currentBlog.viewCount ?? currentBlog.views?.count ?? 0;
 
   return (
     <div className="min-h-screen bg-base-200 py-8 px-4">
@@ -123,37 +124,41 @@ export const BlogDetails = () => {
             {/* Author & Meta */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-10">
               <Link
-                to={`/other-user-profile/${author?._id}`}
+                to={`/other-user-profile/${safeAuthor?._id}`}
                 className="flex items-center gap-4 hover:opacity-80 transition"
               >
                 <div className="avatar">
                   <div className="w-16 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
                     <img
-                      src={author?.avatar || "/default-avatar.png"}
-                      alt={author?.username}
+                      src={safeAuthor?.avatar || "/default-avatar.png"}
+                      alt={safeAuthor?.username}
                     />
                   </div>
                 </div>
                 <div>
-                  <p className="text-lg font-semibold">{author?.username}</p>
-                  <p className="text-sm text-base-content/60">{author?.fullName}</p>
+                  <p className="text-lg font-semibold">{safeAuthor?.username}</p>
+                  <p className="text-sm text-base-content/60">{safeAuthor?.fullName}</p>
                 </div>
               </Link>
 
               <div className="flex flex-wrap gap-6 text-base-content/70">
                 <div className="flex items-center gap-2">
                   <MdOutlineCalendarMonth className="size-5" />
-                  <span>{format(new Date(createdAt), "MMM dd, yyyy")}</span>
+                  <span>{formatDate(createdAt)}</span>
                 </div>
                 {updatedAt && updatedAt !== createdAt && (
                   <div className="flex items-center gap-2">
                     <FaRegClock className="size-5" />
-                    <span>Updated {format(new Date(updatedAt), "MMM dd, yyyy")}</span>
+                    <span>Updated {formatDate(updatedAt)}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-2">
                   <BsEye className="size-5" />
                   <span>{actualViewCount} views</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <IoMdTimer className="size-5" />
+                  <span>{estimateReadTime(content || "")} min read</span>
                 </div>
               </div>
             </div>
@@ -167,7 +172,7 @@ export const BlogDetails = () => {
             <div className="flex items-center justify-between pt-8 border-t border-base-300">
               <button
                 onClick={handleLike}
-                disabled={loading}
+                disabled={!currentUser || loading}
                 className={`btn btn-lg ${isLiked ? "btn-error" : "btn-primary"} gap-3`}
               >
                 <TiHeartOutline className={`size-6 ${isLiked ? "fill-current" : ""}`} />
@@ -187,7 +192,7 @@ export const BlogDetails = () => {
 
         {/* Back Button */}
         <div className="text-center mt-10">
-          <Link to="/blogs" className="btn btn-ghost btn-lg">
+          <Link to={ROUTES.BLOGS} className="btn btn-ghost btn-lg">
             ← Back to All Blogs
           </Link>
         </div>
