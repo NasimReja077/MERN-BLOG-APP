@@ -1,8 +1,11 @@
 import React, { useState } from "react";
+import PropTypes from 'prop-types';
 import { Link } from "react-router-dom";
+import { ROUTES, TOAST_MESSAGES } from '../components/constants';
 import { ImBlog } from "react-icons/im";
 
 import { MdAlternateEmail } from "react-icons/md";
+import { truncateText } from '../utils/formatters';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { forgotPasswordSchema } from '../utils/validation';
@@ -12,7 +15,7 @@ import toast from "react-hot-toast";
 import { SiLodash } from "react-icons/si";
 import { TiArrowLeftOutline } from "react-icons/ti";
 
-export const ForgotPassword = () => {
+export const ForgotPassword = ({ initialEmail = '' }) => {
   const dispatch = useDispatch();
   // const navigate = useNavigate();
   const { loading } = useSelector((state) => state.auth);
@@ -25,18 +28,19 @@ export const ForgotPassword = () => {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm({
-    defaultValues: { email: "" },
+    defaultValues: { email: initialEmail },
     resolver: zodResolver(forgotPasswordSchema),
   });
   
   const onSubmit = async (data) => {
     try {
-        await dispatch(forgotPassword(data.email )).unwrap();
+      // ✅ FIXED: send object, not string
+        await dispatch(forgotPassword({ email: data.email })).unwrap();
         setSubmittedEmail(data.email);
         setIsSubmitted(true);
-        toast.success("Reset link sent! Check your email.");
+        toast.success(TOAST_MESSAGES.PASSWORD_RESET_LINK_SENT);
       } catch (err) {
-        toast.error(err?.message || "Failed to send reset link");
+        toast.error(err?.message || TOAST_MESSAGES.PASSWORD_RESET_LINK_SENT_FAILED);
       }
     };
     
@@ -87,7 +91,7 @@ export const ForgotPassword = () => {
           disabled={loading || isSubmitting}
           className="btn btn-primary btn-lg w-full"
           >
-              {(loading || isSubmitting) ? (
+              {loading || isSubmitting ? (
                 <>
                   <SiLodash className="size-5 animate-spin" />
                   Sending...
@@ -108,7 +112,7 @@ export const ForgotPassword = () => {
             </div>
             <div className="space-y-3">
               <p className="text-base-content/90">
-                If an account exists for <span className="font-semibold">{submittedEmail}</span>,
+                If an account exists for <span className="font-semibold">{truncateText(submittedEmail || "", 40)}</span>,
               </p>
               <p className="text-base-content/80">
                 you will receive a password reset link shortly.
@@ -122,7 +126,7 @@ export const ForgotPassword = () => {
         {/* Back to Login */}
         <div className="text-center pt-4">
           <Link
-            to="/login"
+            to={ROUTES.LOGIN}
             className="inline-flex items-center text-primary hover:underline font-medium"
           >
             <TiArrowLeftOutline className="size-4 mr-2" />
@@ -132,4 +136,8 @@ export const ForgotPassword = () => {
       </div>
     </div>
   );
+};
+
+ForgotPassword.propTypes = {
+  initialEmail: PropTypes.string,
 };

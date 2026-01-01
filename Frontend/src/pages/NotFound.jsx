@@ -1,8 +1,17 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../components/constants';
 import NotFoundImg from "../assets/404.svg";
 import { IoArrowUndoOutline } from "react-icons/io5";
-export const NotFound = () => {
+import { Slugify } from '../utils/formatters';
+export const NotFound = ({
+  redirectTo = ROUTES.HOME,
+  image = NotFoundImg,
+  alt = '404 page illustration',
+  title = 'Page not found',
+  description = "Sorry, the page you are looking for doesn't exist. Here are some helpful links:",
+}) => {
   const navigate = useNavigate();
 
   // Handler to navigate back one step in history
@@ -10,9 +19,9 @@ export const NotFound = () => {
     navigate(-1);
   };
 
-  // Handler to navigate to the home page ("/")
+  // Handler to navigate to the home page (uses ROUTES)
   const handleGoHome = () => {
-    navigate("/");
+    navigate(redirectTo);
   };
 
 
@@ -24,8 +33,8 @@ export const NotFound = () => {
         {/* LEFT CONTENT (TEXT and BUTTONS) */}
         <div className="w-full lg:w-1/2"> 
             <p className="text-sm font-medium text-blue-500 dark:text-blue-400">404 error</p>
-            <h1 className="mt-3 text-2xl font-semibold text-gray-800 dark:text-white md:text-3xl">Page not found</h1>
-            <p className="mt-4 text-gray-500 dark:text-gray-400">Sorry, the page you are looking for doesn't exist. Here are some helpful links:</p>
+            <h1 id={Slugify(title)} className="mt-3 text-2xl font-semibold text-gray-800 dark:text-white md:text-3xl">{title}</h1>
+            <p className="mt-4 text-gray-500 dark:text-gray-400">{description}</p>
 
             <div className="flex items-center mt-6 gap-x-3">
                 {/* Go back Button with onClick handler */}
@@ -52,11 +61,19 @@ export const NotFound = () => {
             {/* Image source uses the imported local asset */}
             <img 
                 className="w-full rounded-lg object-cover" 
-                src={NotFoundImg} 
-                alt="404 page illustration" 
+                src={image} 
+                alt={alt} 
             />
         </div>
     </div>
 </section>
   );
+};
+
+NotFound.propTypes = {
+  redirectTo: PropTypes.string,
+  image: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  alt: PropTypes.string,
+  title: PropTypes.string,
+  description: PropTypes.string,
 };

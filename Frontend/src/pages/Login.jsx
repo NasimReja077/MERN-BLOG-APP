@@ -1,5 +1,8 @@
+// Frontend/src/pages/Login.jsx
 import React, { useState } from "react";
+import PropTypes from 'prop-types';
 import { Link, useNavigate } from "react-router-dom";
+import { ROUTES, TOAST_MESSAGES } from '../components/constants';
 import { ImBlog } from "react-icons/im";
 import { MdOutlineAlternateEmail } from "react-icons/md";
 import { GiPadlock } from "react-icons/gi";
@@ -12,7 +15,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { login } from "../store/features/authSlice";
 import toast from "react-hot-toast";
 
-export const Login = () => {
+export const Login = ({ initialEmail = '', redirectTo = ROUTES.HOME }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading } = useSelector((state) => state.auth);
@@ -25,7 +28,7 @@ export const Login = () => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      email: "",
+      email: initialEmail,
       password: "",
     },
     resolver: zodResolver(loginSchema),
@@ -34,10 +37,10 @@ export const Login = () => {
   const onSubmit = async (data) => {
     try {
       await dispatch(login(data)).unwrap();
-      toast.success("Welcome back! Login successful.");
-      navigate("/");
+      toast.success(TOAST_MESSAGES.LOGIN_SUCCESS);
+      navigate(redirectTo);
     } catch (err) {
-      toast.error(err?.message || "Invalid email or password");
+      toast.error(err?.message || TOAST_MESSAGES.LOGIN_FAILED);
     }
   };
 
@@ -120,7 +123,7 @@ export const Login = () => {
               {/* Forgot Password Link */}
               <div className="label">
                 <Link
-                  to="/forgot-password"
+                  to={ROUTES.FORGOT_PASSWORD}
                   className="label-text-alt link link-primary hover:link-hover"
                 >
                   Forgot password?
@@ -153,7 +156,7 @@ export const Login = () => {
           <div className="text-center">
             <p className="text-base-content/60">
               Don't have an account?{" "}
-              <Link to="/signup" className="link link-primary font-medium">
+              <Link to={ROUTES.SIGNUP} className="link link-primary font-medium">
                 Create account
               </Link>
             </p>
@@ -173,4 +176,9 @@ export const Login = () => {
       </div>
     </div>
   );
+};
+
+Login.propTypes = {
+  initialEmail: PropTypes.string,
+  redirectTo: PropTypes.string,
 };

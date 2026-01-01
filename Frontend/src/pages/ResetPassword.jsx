@@ -1,6 +1,9 @@
+// Frontend/src/pages/ResetPassword.jsx
 import React, { useState } from "react";
+import PropTypes from 'prop-types';
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { GiLoad, GiPadlock } from "react-icons/gi";
+import { ROUTES, TOAST_MESSAGES } from '../components/constants';
+import { GiPadlock } from "react-icons/gi";
 import { GoEye, GoEyeClosed } from "react-icons/go";
 // import { Loader2 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,8 +12,9 @@ import { resetPasswordSchema } from "../utils/validation";
 import { useDispatch, useSelector } from "react-redux";
 import { resetPassword } from "../store/features/authSlice";
 import toast from "react-hot-toast";
+import { FiLoader } from "react-icons/fi";
 
-export const ResetPassword = () => {
+export const ResetPassword = ({ redirectTo = ROUTES.LOGIN }) => {
   const { token } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -33,16 +37,16 @@ export const ResetPassword = () => {
 
   const onSubmit = async (data) => {
     if (!token) {
-      toast.error("Invalid reset link");
+      toast.error(TOAST_MESSAGES.PASSWORD_RESET_FAILED);
       return;
     }
 
     try {
       await dispatch(resetPassword({ token, newPassword: data.newPassword })).unwrap();
-      toast.success("Password reset successfully!");
-      navigate("/login");
+      toast.success(TOAST_MESSAGES.PASSWORD_RESET_SUCCESS);
+      navigate(redirectTo);
     } catch (err) {
-      toast.error(err?.message || "Failed to reset password. Link may be expired.");
+      toast.error(err?.message || TOAST_MESSAGES.PASSWORD_RESET_FAILED);
     }
   };
 
@@ -127,7 +131,7 @@ export const ResetPassword = () => {
             >
               {loading ? (
                 <>
-                  <GiLoad className="size-5 animate-spin" />
+                  <FiLoader className="size-5 animate-spin" />
                   Resetting...
                 </>
               ) : (
@@ -137,7 +141,7 @@ export const ResetPassword = () => {
           </form>
 
           <div className="text-center mt-6">
-            <Link to="/login" className="link link-primary hover:link-hover">
+            <Link to={ROUTES.LOGIN} className="link link-primary hover:link-hover">
               ← Back to Login
             </Link>
           </div>
@@ -145,4 +149,8 @@ export const ResetPassword = () => {
       </div>
     </div>
   );
+};
+
+ResetPassword.propTypes = {
+  redirectTo: PropTypes.string,
 };
