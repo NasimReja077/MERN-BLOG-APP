@@ -1,18 +1,34 @@
+// Frontend/src/pages/Profile
 // import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { Loading } from "../components/feedback/Loading";
 import { ImBlog } from "react-icons/im";
+import { formatDate } from "../utils/formatters";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { fetchUserBlogs } from "../store/features/blogSlice";
+import { BlogList } from "../components/UI/blog/BlogList";
+import { ROUTES } from "../components/constants";
 
 export const Profile = () => {
-  const { user, loading } = useAuth();
+  const dispatch = useDispatch();
+  // const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { blogs: userBlogs, loading: blogsLoading } = useSelector((state) => state.blog);
+
+  useEffect(() => {
+    if (user?._id){
+      dispatch(fetchUserBlogs({ userId: user._id, params: { limit: 10 }}));
+    }
+  }, [user?._id, dispatch]);
 
   // Optional: fetch latest profile if needed
   // useEffect(() => {
   //   dispatch(getProfile());
   // }, [dispatch]);
 
-  if (loading) {
+  if (authLoading) {
     return <Loading fullScreen />;
   }
 
@@ -46,6 +62,7 @@ export const Profile = () => {
                   <img
                     src={user.avatar || "/default-avatar.png"}
                     alt={user.username}
+                    className="object-cover"
                   />
                 </div>
               </div>
@@ -73,14 +90,14 @@ export const Profile = () => {
                 )}
                 <div className="flex items-center gap-2">
                   <ImBlog className="size-5" />
-                  <span>Member since {new Date(user.createdAt).toLocaleDateString()}</span>
+                  <span>Member since {formatDate(user.createdAt)}</span>
                 </div>
               </div>
             </div>
 
             {/* Action Buttons */}
             <div className="mt-8 flex justify-center md:justify-end">
-              <Link to="/profile/update" className="btn btn-primary btn-lg">
+              <Link to={ROUTES.UPDATE_PROFILE} className="btn btn-primary btn-lg">
                 Edit Profile
               </Link>
             </div>
@@ -88,14 +105,22 @@ export const Profile = () => {
         </div>
 
         {/* Stats or Blogs Section */}
-        <div className="mt-10 text-center">
-          <h2 className="text-2xl font-bold mb-6">Your Blogs</h2>
-          {/* You can add a BlogList here filtered by author */}
-          <p className="text-base-content/60">Your published blogs will appear here.</p>
-          <Link to="/blogs/create" className="btn btn-primary mt-6">
-            Write New Blog
-          </Link>
-        </div>
+        <section className="mt-1">
+          <h2 className="text-3xl font-bold text-center mb-8">Your Blogs</h2>
+
+          {blogsLoading ? (
+            <Loading />
+          ): userBlogs.length > 0 ? (
+            <BlogList blogs={userBlogs} />
+          ): (
+            <div className="text-center py-16 bg-base-100 rounded-2xl shadow">
+              <p className="text-base-content/60 mb-6">You haven't published any blogs yet.</p>
+              <Link to={ROUTES.CREATE_BLOG} className="btn btn-primary">
+                Write Your First Blog
+              </Link>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );
