@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchBlogById, likeBlog } from "../store/features/blogSlice";
 import { Loading } from "../components/feedback/Loading";
 import toast from "react-hot-toast";
-Simport { TiHeartOutline } from "react-icons/ti";
+import { TiHeartOutline } from "react-icons/ti";
 import { BsEye } from "react-icons/bs";
 import { MdOutlineCalendarMonth } from "react-icons/md";
 import { FaRegClock } from "react-icons/fa";
