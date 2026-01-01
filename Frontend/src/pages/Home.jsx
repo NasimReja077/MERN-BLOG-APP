@@ -31,19 +31,56 @@
 
 
 // src/pages/Home.jsx
+// // import React, { useEffect } from 'react'
+// // 💡 Import useDispatch here
+// import { useSelector } from 'react-redux';
+// import { BlogList } from '../components/UI/blog/BlogList';
+// // 💡 Import fetchBlogs from the slice file
+// // import { fetchBlogs } from '../store/features/blogSlice'; // Assuming the slice is in '../features/blogSlice'
+
+// function Home() {
+// // 👇 Use useDispatch
+// // const dispatch = useDispatch();
+// const { blogs, loading } = useSelector((state) => state.blog);
+
+// // Fetch blogs when the component mounts or filters change
+// // useEffect(() => {
+// // // Dispatch the fetchBlogs action with the current filters
+// // dispatch(fetchBlogs(filters));
+// // }, [dispatch, filters]); // Re-fetch when filters change
+
+//  return (
+//  <div className="container mx-auto px-4 py-8">
+//   {/* Blog List */}
+//   <BlogList blogs={blogs} loading={loading} />
+//   </div>
+//  )
+// }
+
+// export default Home
+
+
+
+
+
+// src/pages/Home.jsx
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { BlogList } from '../components/UI/blog/BlogList';
 import { useAuth } from '../hooks/useAuth';
 import { Loading } from '../components/feedback/Loading';
+import { ROUTES, DEFAULT_PAGE_SIZE } from '../components/constants';
+import { formatCompactNumber } from '../utils/formatters';
+// import { BlogCardGrid } from '../components/UI/blog/BlogCardGrid';
 
-export const Home = () => {
+export const Home = ({ previewLimit = DEFAULT_PAGE_SIZE }) => {
   const { blogs, loading } = useSelector((state) => state.blog);
   const { isAuthenticated, user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-blue-200">
+    <div className="min-h-screen bg-base-200">
       {/* Hero */}
       <section className="container mx-auto px-6 py-20 text-center">
         <h1 className="text-5xl md:text-7xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
@@ -56,19 +93,19 @@ export const Home = () => {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           {isAuthenticated ? (
             <>
-              <Link to="/blogs/create" className="btn btn-lg btn-primary">
+              <Link to={ROUTES.CREATE_BLOG} className="btn btn-lg btn-primary">
                 Write Your First Blog
               </Link>
-              <Link to="/blogs" className="btn btn-lg btn-outline">
+              <Link to={ROUTES.BLOGS} className="btn btn-lg btn-outline">
                 Explore Blogs
               </Link>
             </>
           ) : (
             <>
-              <Link to="/signup" className="btn btn-lg btn-primary">
+              <Link to={ROUTES.SIGNUP} className="btn btn-lg btn-primary">
                 Start Writing Free
               </Link>
-              <Link to="/login" className="btn btn-lg btn-outline border-4 border-amber-500  text-amber-500">
+              <Link to={ROUTES.LOGIN} className="btn btn-lg btn-outline border-4 border-amber-500 text-amber-500">
                 Login
               </Link>
             </>
@@ -86,7 +123,7 @@ export const Home = () => {
       <section className="container mx-auto px-6 pb-20">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-800">Latest Blogs</h2>
-          <p className="text-gray-600 mt-2">Discover stories from our community</p>
+          <p className="text-gray-600 mt-2">Discover stories from our community · Showing {formatCompactNumber(Math.min(blogs?.length || 0, previewLimit))}</p>
         </div>
 
         {loading ? (
@@ -96,12 +133,12 @@ export const Home = () => {
             <p className="text-gray-500 text-lg">No blogs yet. Be the first to write one!</p>
           </div>
         ) : (
-          <BlogList blogs={blogs} loading={false} />
+          <BlogList blogs={blogs.slice(0, previewLimit)} loading={false} />
         )}
 
-        {blogs.length > 0 && (
+        {blogs.length > previewLimit && (
           <div className="text-center mt-12">
-            <Link to="/blogs" className="btn btn-primary">
+            <Link to={ROUTES.BLOGS} className="btn btn-primary">
               View All Blogs
             </Link>
           </div>
@@ -109,6 +146,10 @@ export const Home = () => {
       </section>
     </div>
   );
+};
+
+Home.propTypes = {
+  previewLimit: PropTypes.number,
 };
 
 export default Home;
