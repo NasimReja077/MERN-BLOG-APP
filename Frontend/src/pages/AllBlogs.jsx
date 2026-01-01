@@ -1,15 +1,20 @@
+// Frontend/src/pages/AllBlogs.jsx
 import React, { useEffect } from "react";
+import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from "react-redux";
 import { fetchBlogs } from "../store/features/blogSlice";
 import { HorizontalBlogList } from "../components/UI/blog/HorizontalBlogList";
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, ROUTES } from '../components/constants';
+// import { formatCompactNumber } from '../utils/formatters';
 
-export const AllBlogs = () => {
+export const AllBlogs = ({ initialPage = DEFAULT_PAGE, pageSize = DEFAULT_PAGE_SIZE }) => {
   const dispatch = useDispatch();
-  const { blogs, loading } = useSelector((state) => state.blog);
+  const { blogs = [], loading } = useSelector((state) => state.blog);
 
   useEffect(() => {
-    dispatch(fetchBlogs({ page: 1, limit: 10 }));
-  }, [dispatch]);
+    dispatch(fetchBlogs({ page: initialPage, limit: pageSize }));
+  }, [dispatch, initialPage, pageSize]);
 
   return (
     <div className="min-h-screen bg-base-200 py-20">
@@ -24,8 +29,20 @@ export const AllBlogs = () => {
           </p>
         </header>
 
+        <div className="flex items-center justify-between mb-8">
+          <div className="text-sm text-gray-500">Showing {blogs?.length} stories</div>
+          <Link to={ROUTES.CREATE_BLOG} className="btn btn-outline btn-sm">
+            Write a Story
+          </Link>
+        </div>
+
         <HorizontalBlogList blogs={blogs} loading={loading} />
       </div>
     </div>
   );
+};
+
+AllBlogs.propTypes = {
+  initialPage: PropTypes.number,
+  pageSize: PropTypes.number,
 };
