@@ -7,9 +7,9 @@ const axiosInstance = axios.create({
      baseURL: API_BASE_URL,
      withCredentials: true, // Sends HTTP-only cookies automatically
      timeout: API_TIMEOUT,
-     headers: {
-      'Content-Type': 'application/json',
-    },
+    //  headers: {
+    //   'Content-Type': 'application/json',
+    // },
 });
 
 // Request interceptor
@@ -55,6 +55,22 @@ const axiosInstance = axios.create({
 //   }
 // )
 
+// Request interceptor
+axiosInstance.interceptors.request.use(
+  (config) => {
+    // Let axios automatically set Content-Type for FormData
+    // Only set application/json for non-FormData requests
+
+    if (config.data && !(config.data instanceof FormData)){
+      config.headers['Content-Type'] = 'application/json';
+    }
+
+    // If it's FormData, axios will automatically set:
+    // Content-Type: multipart/form-data; boundary=----WebKitFormBoundary...
+
+    return config;
+  }, (error) => Promise.reject(error)
+);
 // Response interceptor for global error handling
 axiosInstance.interceptors.response.use(
   (response) => response,
