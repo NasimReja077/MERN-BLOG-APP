@@ -18,16 +18,12 @@ export const blogApi = {
   },
 
   createBlog: async (formData) => {
-    const response = await axiosInstance.post('/blogs', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await axiosInstance.post('/blogs', formData);
     return response.data;
   },
 
   updateBlog: async (id, formData) => {
-    const response = await axiosInstance.put(`/blogs/${id}`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await axiosInstance.put(`/blogs/${id}`, formData);
     return response.data;
   },
 
@@ -54,18 +50,14 @@ export const blogApi = {
   uploadThumbnail: async (id, file) => {
     const formData = new FormData();
     formData.append('thumbnail', file);
-    const response = await axiosInstance.post(`/blogs/${id}/thumbnail`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await axiosInstance.post(`/blogs/${id}/thumbnail`, formData);
     return response.data;
   },
 
   uploadContentImages: async (id, files) => { 
     const formData = new FormData();
     files.forEach((file) => formData.append('contentImages', file));
-    const response = await axiosInstance.post(`/blogs/${id}/content-images`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const response = await axiosInstance.post(`/blogs/${id}/content-images`, formData);
     return response.data;
   },
 };
