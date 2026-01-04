@@ -1,3 +1,4 @@
+// Frontend/src/pages/BlogDetails.jsx
 import React, { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,7 +8,7 @@ import toast from "react-hot-toast";
 import { TiHeartOutline } from "react-icons/ti";
 import { BsEye } from "react-icons/bs";
 import { MdOutlineCalendarMonth } from "react-icons/md";
-import { FaRegClock } from "react-icons/fa";
+import { FaRegClock, FaEdit } from "react-icons/fa";
 import { blogApi } from "../api/blogApi";
 import { ROUTES } from "../components/constants";
 import { estimateReadTime, formatDate } from "../utils/formatters";
@@ -181,7 +182,8 @@ export const BlogDetails = () => {
 
               {isOwner && (
                 <div className="flex gap-3">
-                  <Link to={`/blogs/edit/${id}`} className="btn btn-outline btn-lg">
+                  <Link to={`/blogs/edit/${id}`} className="btn btn-outline btn-lg gap-2">
+                    <FaEdit className="h-5 w-5" />
                     Edit Blog
                   </Link>
                 </div>
