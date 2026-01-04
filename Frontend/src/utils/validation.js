@@ -1,14 +1,14 @@
 import { z } from 'zod';
 
 export const registerSchema = z.object({
-     username: z.string().min(3, 'Username must be at least 3 characters').max(30, 'Username must be at most 30 characters'),
-     email: z.string().email('Invalid email address'),
-     password: z.string().min(6, 'Password must be at least 6 characters'),
-     fullName: z.string().max(100).optional(),
-     bio: z.string().max(500).optional(),
-     address: z.string().max(200).optional(),
-     mobile: z.string().regex(/^\d{10}$/, 'Mobile must be 10 digits').optional().or(z.literal('')),
-     aadhar: z.string().regex(/^\d{12}$/, 'Aadhar must be 12 digits').optional().or(z.literal('')),
+  username: z.string().min(3, 'Username must be at least 3 characters').max(30, 'Username must be at most 30 characters'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  fullName: z.string().max(100).optional(),
+  bio: z.string().max(500).optional(),
+  address: z.string().max(200).optional(),
+  mobile: z.string().regex(/^\d{10}$/, 'Mobile must be 10 digits').optional().or(z.literal('')),
+  aadhar: z.string().regex(/^\d{12}$/, 'Aadhar must be 12 digits').optional().or(z.literal('')),
 });
 
 export const otpSchema = z.object({
@@ -29,21 +29,40 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   newPassword: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z
-    .string()
-    .min(1, "Please confirm your password"),
+  confirmPassword: z.string().min(1, "Please confirm your password"),
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
 });
 
 export const blogSchema = z.object({
-     title: z.string().min(1, 'Title is required').max(200),
-     content: z.string().min(1, 'Content is required'),
-     summary: z.string().max(500).optional(),
-     category: z.string().optional(),
-     tags: z.string().optional(),
-     status: z.enum(['draft', 'published']).optional(),
+  title: z.string()
+    .min(1, 'Title is required')
+    .max(200, 'Title must be at most 200 characters'),
+  
+  content: z.string()
+    .min(1, 'Content is required'),
+  
+  summary: z.string()
+    .max(500, 'Summary must be at most 500 characters')
+    .optional()
+    .or(z.literal('')),
+  
+  category: z.string()
+    .optional()
+    .or(z.literal('')),
+  
+  tags: z.array(z.string())
+    .optional()
+    .default([]),
+  
+  status: z.enum(['draft', 'published'])
+    .optional()
+    .default('published'),
+  
+  thumbnail: z.any()
+    .optional()
+    .nullable(),
 })
 
 export const commentSchema = z.object({
@@ -57,4 +76,4 @@ export const profileUpdateSchema = z.object({
   address: z.string().max(200).optional(),
   mobile: z.string().regex(/^\d{10}$/, 'Mobile must be 10 digits').optional().or(z.literal('')),
   aadhar: z.string().regex(/^\d{12}$/, 'Aadhar must be 12 digits').optional().or(z.literal('')),
-});                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+});
