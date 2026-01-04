@@ -1,3 +1,4 @@
+// Frontend/src/store/features/blogSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { blogApi } from '../../api/blogApi';
 import toast from 'react-hot-toast';
@@ -110,7 +111,7 @@ export const likeBlog = createAsyncThunk(
      async ( id, { rejectWithValue }) =>{
           try {
                const data = await blogApi.likeBlog(id);
-               return { id, likeCount: data.likeCount };
+               return { id, ...data };
           } catch (error) {
                return rejectWithValue(error.response?.data || error.message);
           }
@@ -140,7 +141,7 @@ const blogSlice = createSlice({
                })
                .addCase(fetchBlogs.fulfilled, (state, action) =>{
                     state.loading = false;
-                    state.blogs = action.payload.blogs;
+                    state.blogs = action.payload.blogs || [];
                     state.pagination = action.payload.pagination;
                })
                .addCase(fetchBlogs.rejected, (state, action) =>{
@@ -164,7 +165,7 @@ const blogSlice = createSlice({
                })
                .addCase(fetchBlogById.rejected, (state, action) =>{
                     state.loading = false;
-                    state.error = action.payload;
+                    state.error = action.payload?.message || 'Failed to load blog';
                })
 
                // Fetch User Blogs
@@ -173,29 +174,31 @@ const blogSlice = createSlice({
                })
                .addCase(fetchUserBlogs.fulfilled, (state, action) =>{
                     state.loading = false;
-                    state.blogs = action.payload.blogs;
+                    state.blogs = action.payload.blogs || [];
                     state.pagination = action.payload.pagination;
                })
                .addCase(fetchUserBlogs.rejected, (state, action) =>{
                     state.loading = false;
-                    state.error = action.payload;
+                    state.error = action.payload?.message || 'Failed to load user blogs';
                })
 
                // Create Blog
                .addCase(createBlog.pending, (state) =>{
                     state.loading = true;
+                    state.error = null;
                })
                .addCase(createBlog.fulfilled, (state, action) =>{
                     state.loading = false;
-                    state.blogs.unshift(action.payload.blog);
+                    if (action.payload.blog){
+                         state.blogs.unshift(action.payload.blog);
+                    }
                     toast.success(TOAST_MESSAGES.BLOG_CREATED);
                })
                .addCase(createBlog.rejected, (state, action) =>{
                     state.loading = false;
-                    state.error = action.payload;
-                    toast.error(action.payload?.message || TOAST_MESSAGES.BLOG_CREATE_FAILED);
+                    state.error = action.payload?.message || TOAST_MESSAGES.BLOG_CREATE_FAILED;
+                    toast.error(state.error);
                })
-
 
                // Update Blog
                .addCase(updateBlog.pending, (state) =>{
@@ -214,8 +217,8 @@ const blogSlice = createSlice({
                
                .addCase(updateBlog.rejected, (state, action) => {
                     state.loading = false;
-                    state.error = action.payload;
-                    toast.error(action.payload?.message || TOAST_MESSAGES.BLOG_UPDATE_FAILED);
+                    state.error = action.payload?.message || TOAST_MESSAGES.BLOG_UPDATE_FAILED;
+                    toast.error(state.error);
                })
 
                // Delete Blog
@@ -228,11 +231,19 @@ const blogSlice = createSlice({
                })
 
                // Like Blog
-               .addCase(likeBlog.fulfilled, (state, action) =>{
-                    const { id, likeCount } = action.payload;
+               .addCase(likeBlog.fulfilled, (state, action) => {
+                    const { id, likeCount, isLiked } = action.payload;
+        
+                    // Update in blogs list
                     const blog = state.blogs.find((b) => b._id === id);
-                    if (blog) blog.likes.count = likeCount;
+                    if (blog) {
+                      if (!blog.likes) blog.likes = { count: 0, users: [] };
+                      blog.likes.count = likeCount;
+                    }
                     if (state.currentBlog?._id === id) {
+                         if (!state.currentBlog.likes){
+                              state.currentBlog.likes = { count: 0, users: [] };
+                         }
                          state.currentBlog.likes.count = likeCount;
                     }
                });
