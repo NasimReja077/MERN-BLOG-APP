@@ -1,6 +1,6 @@
 // Frontend/src/components/UI/editor/RichTextEditor
-import React from "react";
-import { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import PropTypes from 'prop-types';
 import { Editor } from "@tinymce/tinymce-react";
 import {MdEditor} from "md-editor-rt";
 import "md-editor-rt/lib/style.css";
@@ -28,47 +28,40 @@ turndownService.addRule("image", {
   },
 });
 
-const handlePasteImage = (event) => {
-  const items = event.clipboardData?.items;
-  if (!items) return;
-
-  for (const item of items) {
-    if (item.type.indexOf("image") !== -1) {
-      const file = item.getAsFile();
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        const imageMarkdown = `![pasted-image](${reader.result})\n`;
-        setMarkdown((prev) => prev + "\n" + imageMarkdown);
-      };
-      reader.readAsDataURL(file);
-
-      event.preventDefault(); // ❗ stop default paste
-    }
-  }
-};
-
-export const RichTextEditor = () => {
+export const RichTextEditor = ({ onChange, value = '', error }) => {
      const [mode, setMode] = useState('visual');
      const [html, setHtml] = useState('');
      const [markdown, setMarkdown] = useState('');
 
+     // Sync external value prop → internal state (critical for edit mode!)
+     useEffect(() => {
+      if (value){
+        setHtml(value);
+        const convertedMarkdown = turndownService.turndown(value);
+        setMarkdown(convertedMarkdown);
+      } else {
+        setHtml('');
+        setMarkdown('');
+      }
+     }, [value])
+
      // Sync Visual (TinyMCE) → Markdown State
-     const handleVisualChange = (content) => {
+     const handleVisualChange = useCallback((content) => {
           setHtml(content);
           // Keep Markdown state in sync or update on mode switch
           const convertedMarkdown = turndownService.turndown(content);
-           setMarkdown(convertedMarkdown);
-     };
+          setMarkdown(convertedMarkdown);
+          if (onChange) onChange(content);
+     },[onChange]);
 
      // Sync Markdown (md-editor-rt) -> HTML
      // Note: md-editor-rt returns the string directly
-     const handleMarkdownChange = (value) => {
+     const handleMarkdownChange = useCallback((value) => {
           setMarkdown(value);
           const convertedHtml = mdParser.render(value);
           setHtml(convertedHtml);
-     };
+          if (onChange) onChange(convertedHtml);
+     }, [onChange]);
 
      // This function can convert File object to a datauri string
      const onUploadImg = async (files, callback) => {
@@ -82,6 +75,24 @@ export const RichTextEditor = () => {
           reader.readAsDataURL(file);
      };
      
+    const handlePasteImage = (event) => {
+      const items = event.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.indexOf("image") !== -1) {
+          const file = item.getAsFile();
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            const imageMarkdown = `![pasted-image](${reader.result})\n`;
+            setMarkdown((prev) => prev + "\n" + imageMarkdown);
+          };
+          reader.readAsDataURL(file);
+          event.preventDefault(); //stop default paste
+        }
+      }
+    };
+     
 
   return (
     <div className="space-y-4">
@@ -92,8 +103,10 @@ export const RichTextEditor = () => {
      <div className="flex gap-2">
         <button
           onClick={() => setMode("visual")}
-          className={`px-4 py-2 rounded-lg flex items-center gap-2 text-white ${
-            mode === "visual" ? "bg-blue-600" : "bg-gray-700"
+          className={`px-4 py-2 rounded-lg flex items-center gap-2 cursor-pointer transition-colors ${
+            mode === "visual" 
+              ? "bg-primary text-primary-content" 
+              : "bg-base-300 text-base-content hover:bg-base-200"
           }`}
         >
           <FiEdit /> Visual
@@ -101,15 +114,17 @@ export const RichTextEditor = () => {
 
         <button
           onClick={() => setMode("markdown")}
-          className={`px-4 py-2 rounded-lg flex items-center gap-2 text-white ${
-            mode === "markdown" ? "bg-blue-600" : "bg-gray-700"
+          className={`px-4 py-2 rounded-lg flex items-center gap-2 cursor-pointer transition-colors ${
+            mode === "markdown" 
+              ? "bg-primary text-primary-content" 
+              : "bg-base-300 text-base-content hover:bg-base-200"
           }`}
         >
           <FiCode /> Markdown
         </button>
       </div>
      {/* Editor Container */}
-     <div className="border border-gray-700 rounded-lg overflow-hidden">
+     <div className="border-2 border-gray-700 rounded-lg overflow-hidden">
      { mode === "visual" ? (
           <Editor
                apiKey={import.meta.env.VITE_TINYMCE_API_KEY}
@@ -136,11 +151,13 @@ export const RichTextEditor = () => {
                     ],
                     ai_request: (request, respondWith) => respondWith.string(() => Promise.reject('See docs to implement AI Assistant')),
                     uploadcare_public_key: import.meta.env.VITE_TINYMCE_PUBLIC_KEY,
+                    placeholder: 'Write your blog content here...',
                }}
           />
      ):(
-          <div onPaste={handlePasteImage}>
-     <MdEditor
+     
+     <div onPaste={handlePasteImage}> 
+     <MdEditor 
           modelValue={markdown}
           onChange={handleMarkdownChange}
           onUploadImg={onUploadImg}
@@ -162,10 +179,27 @@ export const RichTextEditor = () => {
           /* Footer */
           footers={["markdownTotal", "scrollSwitch"]}
           /* Sticky toolbar */
-          toolbarSticky={true}/>
-          </div>
-     )}
-     </div>
+          toolbarSticky={true}
+          placeholder="Write your blog content here..."
+      />
+      </div>
+    )}
+    </div>
+      {/* Error Message */}
+      {error && (
+        <p className="text-error text-sm font-medium mt-2">{error}</p>
+      )}
     </div>
   );
 };
+
+RichTextEditor.propTypes = {
+  onChange: PropTypes.func.isRequired,
+  value: PropTypes.string,
+  error: PropTypes.string,
+};
+
+RichTextEditor.defaultProps ={
+  value: '',
+  error: '',
+}
