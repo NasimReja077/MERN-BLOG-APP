@@ -1,27 +1,29 @@
 // Frontend/src/pages/Profile
-// import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { Loading } from "../components/feedback/Loading";
 import { ImBlog } from "react-icons/im";
 import { formatDate } from "../utils/formatters";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
 import { fetchUserBlogs } from "../store/features/blogSlice";
 import { BlogList } from "../components/UI/blog/BlogList";
 import { ROUTES } from "../components/constants";
 
 export const Profile = () => {
   const dispatch = useDispatch();
-  // const { user, loading: authLoading } = useAuth();
   const { user, loading: authLoading } = useAuth();
   const { blogs: userBlogs, loading: blogsLoading } = useSelector((state) => state.blog);
 
+  const [activeTab, setActiveTab] = useState('published');
+
   useEffect(() => {
     if (user?._id){
-      dispatch(fetchUserBlogs({ userId: user._id, params: { limit: 10 }}));
+      // Fetch based on active tab
+      const status = activeTab === 'drafts' ? 'draft' : 'published';
+      dispatch(fetchUserBlogs({ userId: user._id, params: { limit: 10, status }}));
     }
-  }, [user?._id, dispatch]);
+  }, [user?._id, dispatch, activeTab]);
 
   // Optional: fetch latest profile if needed
   // useEffect(() => {
@@ -59,11 +61,17 @@ export const Profile = () => {
             <div className="absolute -top-16 left-1/2 -translate-x-1/2 md:left-10 md:translate-x-0">
               <div className="avatar">
                 <div className="w-32 md:w-40 rounded-full ring ring-primary ring-offset-base-100 ring-offset-4">
-                  <img
-                    src={user.avatar || "/default-avatar.png"}
-                    alt={user.username}
-                    className="object-cover"
-                  />
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.username}
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-primary text-white flex items-center justify-center text-4xl font-bold">
+                      {user.username?.[0]?.toUpperCase()}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -104,9 +112,24 @@ export const Profile = () => {
           </div>
         </div>
 
-        {/* Stats or Blogs Section */}
-        <section className="mt-1">
-          <h2 className="text-3xl font-bold text-center mb-8">Your Blogs</h2>
+        {/* Blogs Section with Tabs */}
+        <section className="mt-10">
+          {/* Tabs */}
+          <div className="flex justify-center mb-8">
+            <div className="tabs tabs-boxed bg-base-100 p-1">
+              <button
+                className={`tab tabs-lg ${activeTab === 'published' ? 'tab-active' : ''}`}
+                onClick={() => setActiveTab('published')}
+              >Published Blogs</button>
+              <button
+                className={`tab tabs-lg ${activeTab === 'drafts' ? 'tab-active' : ''}`}
+                onClick={() => setActiveTab('drafts')}
+              >Drafts Blogs</button>
+            </div>
+          </div>
+          <h2 className="text-3xl font-bold text-center mb-8">
+            {activeTab === 'published' ? 'Your Published Blogs' : 'Your Drafts Blogs'}
+          </h2>
 
           {blogsLoading ? (
             <Loading />
@@ -114,7 +137,11 @@ export const Profile = () => {
             <BlogList blogs={userBlogs} />
           ): (
             <div className="text-center py-16 bg-base-100 rounded-2xl shadow">
-              <p className="text-base-content/60 mb-6">You haven't published any blogs yet.</p>
+              <p className="text-base-content/60 mb-6">
+                {activeTab === 'published' 
+                  ? "You haven't published any blogs yet." 
+                  : "You don't have any draft blogs."}
+              </p>
               <Link to={ROUTES.CREATE_BLOG} className="btn btn-primary">
                 Write Your First Blog
               </Link>
