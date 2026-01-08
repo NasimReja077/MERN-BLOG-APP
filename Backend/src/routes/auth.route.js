@@ -1,6 +1,6 @@
 // Backend/routes/auth.route.js
 import express from "express";
-import{register, login, getProfile, updateProfile, logout, uplodeUserAvatar, uploadUserCoverImage, verifyOTP, forgotPasswordRequest, resetPassword} from "../controllers/auth.controller.js"
+import{register, login, getProfile, updateProfile, logout, uplodeUserAvatar, uploadUserCoverImage, verifyOTP, forgotPasswordRequest, resetPassword, getUserById} from "../controllers/auth.controller.js"
 import { auth } from "../middleware/auth.js";
 
 import { validate, schemas } from "../middleware/validation.js";
@@ -33,6 +33,8 @@ router.get("/profile", auth, getProfile);
 // Update user profile
 router.put("/profile", auth, uploadProfileImages, validate(schemas.updateProfile), updateProfile);
 
+// Get public user profile by ID
+router.get("/users/:id", getUserById);
 
 // Logout user
 router.post("/logout", auth, logout);
