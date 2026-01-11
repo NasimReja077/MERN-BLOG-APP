@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchUserBlogs } from "../store/features/blogSlice";
 import { BlogList } from "../components/UI/blog/BlogList";
 import { ROUTES } from "../components/constants";
+import ModalImage from "react-modal-image";
 
 export const Profile = () => {
   const dispatch = useDispatch();
@@ -50,7 +51,15 @@ export const Profile = () => {
           {/* Cover Image */}
           {user.coverImage ? (
             <div className="h-48 md:h-64 overflow-hidden">
-              <img src={user.coverImage} alt="Cover" className="w-full h-full object-cover" />
+              {/* <img src={user.coverImage} alt="Cover" className="w-full h-full object-cover" /> */}
+              <ModalImage 
+              small={user.coverImage}
+                large={user.coverImage}
+                alt="Cover Image"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                hideDownload={true}
+                hideZoom={false}
+              />
             </div>
           ) : (
             <div className="h-48 md:h-64 bg-linear-to-r from-primary to-secondary"></div>
