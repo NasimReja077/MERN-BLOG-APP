@@ -270,7 +270,6 @@ export const EditBlog = () => {
               <input
                 {...register("title")}
                 type="text"
-                disabled={loading}
                 placeholder="Enter post title..."
                 className="input input-bordered w-full"
                 disabled={loading || uploading}
@@ -314,7 +313,7 @@ export const EditBlog = () => {
                     Current Thumbnail
                   </p>
                 </div>
-              </div> // Added this closing tag
+              </div>
             )}
             {/* Thumbnail */}
             <ThumbnailUploader
@@ -342,9 +341,7 @@ export const EditBlog = () => {
                     Upload New Thumbnail
                   </>
                 )}
-
                 </button>
-
               </div>
             )}
             {/*Content*/}
